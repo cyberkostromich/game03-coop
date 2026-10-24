@@ -1,0 +1,56 @@
+{
+ "id": "rat_king",
+ "faction": "rats",
+ "name": "Крыса-Король",
+ "role": "boss",
+ "species": "rat",
+ "scale": 2.1,
+ "tris": 8296,
+ "bones": 29,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 18,
+   "seconds": 0.6,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  },
+  "Cast": {
+   "frames": 40,
+   "seconds": 1.333,
+   "loop": false
+  }
+ },
+ "walk_speed": 0.994,
+ "height": 1.982,
+ "team_default": "#6f8a2a",
+ "file": "rat_king.glb"
+}

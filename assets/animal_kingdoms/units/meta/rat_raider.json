@@ -1,0 +1,51 @@
+{
+ "id": "rat_raider",
+ "faction": "rats",
+ "name": "Крыса-оборванец",
+ "role": "infantry",
+ "species": "rat",
+ "scale": 1.0,
+ "tris": 8114,
+ "bones": 29,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 18,
+   "seconds": 0.6,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  }
+ },
+ "walk_speed": 0.474,
+ "height": 0.929,
+ "team_default": "#6f8a2a",
+ "file": "rat_raider.glb"
+}

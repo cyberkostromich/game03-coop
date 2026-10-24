@@ -1,0 +1,51 @@
+{
+ "id": "hare_vityaz",
+ "faction": "hares",
+ "name": "Князь-витязь",
+ "role": "elite",
+ "species": "hare",
+ "scale": 1.08,
+ "tris": 12886,
+ "bones": 28,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 20,
+   "seconds": 0.667,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  }
+ },
+ "walk_speed": 0.566,
+ "height": 1.434,
+ "team_default": "#a3243b",
+ "file": "hare_vityaz.glb"
+}

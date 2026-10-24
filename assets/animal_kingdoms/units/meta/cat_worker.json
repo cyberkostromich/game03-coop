@@ -1,0 +1,56 @@
+{
+ "id": "cat_worker",
+ "faction": "cats",
+ "name": "Котёнок-подмастерье",
+ "role": "worker",
+ "species": "cat",
+ "scale": 0.84,
+ "tris": 8362,
+ "bones": 29,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  },
+  "Work": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": true
+  }
+ },
+ "walk_speed": 0.273,
+ "height": 0.888,
+ "team_default": "#2b3f8f",
+ "file": "cat_worker.glb"
+}

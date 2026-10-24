@@ -1,0 +1,51 @@
+{
+ "id": "cat_assassin",
+ "faction": "cats",
+ "name": "Чёрный кот-ассасин",
+ "role": "elite",
+ "species": "cat",
+ "scale": 1.0,
+ "tris": 9176,
+ "bones": 29,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  }
+ },
+ "walk_speed": 0.325,
+ "height": 1.032,
+ "team_default": "#2b3f8f",
+ "file": "cat_assassin.glb"
+}

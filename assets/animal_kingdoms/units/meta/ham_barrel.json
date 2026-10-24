@@ -1,0 +1,51 @@
+{
+ "id": "ham_barrel",
+ "faction": "hamsters",
+ "name": "Хомяк-тяжеловес в бочке-доспехе",
+ "role": "elite",
+ "species": "hamster",
+ "scale": 1.1,
+ "tris": 8078,
+ "bones": 27,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 18,
+   "seconds": 0.6,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  }
+ },
+ "walk_speed": 0.271,
+ "height": 0.936,
+ "team_default": "#c0592f",
+ "file": "ham_barrel.glb"
+}

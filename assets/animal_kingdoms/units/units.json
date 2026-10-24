@@ -1,0 +1,1113 @@
+{
+ "cat_assassin": {
+  "id": "cat_assassin",
+  "faction": "cats",
+  "name": "Чёрный кот-ассасин",
+  "role": "elite",
+  "species": "cat",
+  "scale": 1.0,
+  "tris": 9176,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.325,
+  "height": 1.032,
+  "team_default": "#2b3f8f",
+  "file": "cat_assassin.glb"
+ },
+ "cat_crossbow": {
+  "id": "cat_crossbow",
+  "faction": "cats",
+  "name": "Арбалетчик-сиамец",
+  "role": "ranged",
+  "species": "cat",
+  "scale": 1.0,
+  "tris": 9122,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 36,
+    "seconds": 1.2,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.325,
+  "height": 1.033,
+  "team_default": "#2b3f8f",
+  "file": "cat_crossbow.glb"
+ },
+ "cat_hero_murena": {
+  "id": "cat_hero_murena",
+  "faction": "cats",
+  "name": "Герцогиня Мурена Когтистая",
+  "role": "hero",
+  "species": "cat",
+  "scale": 1.22,
+  "tris": 9724,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Cast": {
+    "frames": 40,
+    "seconds": 1.333,
+    "loop": false
+   }
+  },
+  "walk_speed": 0.396,
+  "height": 1.259,
+  "team_default": "#2b3f8f",
+  "file": "cat_hero_murena.glb"
+ },
+ "cat_swordsman": {
+  "id": "cat_swordsman",
+  "faction": "cats",
+  "name": "Мечник-полосатик",
+  "role": "infantry",
+  "species": "cat",
+  "scale": 1.0,
+  "tris": 12722,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.325,
+  "height": 1.032,
+  "team_default": "#2b3f8f",
+  "file": "cat_swordsman.glb"
+ },
+ "cat_worker": {
+  "id": "cat_worker",
+  "faction": "cats",
+  "name": "Котёнок-подмастерье",
+  "role": "worker",
+  "species": "cat",
+  "scale": 0.84,
+  "tris": 8362,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Work": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.273,
+  "height": 0.888,
+  "team_default": "#2b3f8f",
+  "file": "cat_worker.glb"
+ },
+ "dog_archer": {
+  "id": "dog_archer",
+  "faction": "dogs",
+  "name": "Лучник-гончая",
+  "role": "ranged",
+  "species": "dog",
+  "scale": 1.0,
+  "tris": 9192,
+  "bones": 30,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 26,
+    "seconds": 0.867,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 36,
+    "seconds": 1.2,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.432,
+  "height": 0.944,
+  "team_default": "#2f6b3a",
+  "file": "dog_archer.glb"
+ },
+ "dog_bulldog_guard": {
+  "id": "dog_bulldog_guard",
+  "faction": "dogs",
+  "name": "Бульдог-гвардеец",
+  "role": "elite",
+  "species": "dog",
+  "scale": 1.06,
+  "tris": 11462,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 26,
+    "seconds": 0.867,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.458,
+  "height": 1.112,
+  "team_default": "#2f6b3a",
+  "file": "dog_bulldog_guard.glb"
+ },
+ "dog_worker": {
+  "id": "dog_worker",
+  "faction": "dogs",
+  "name": "Щенок-оруженосец",
+  "role": "worker",
+  "species": "dog",
+  "scale": 0.84,
+  "tris": 7648,
+  "bones": 30,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 26,
+    "seconds": 0.867,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Work": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.363,
+  "height": 0.79,
+  "team_default": "#2f6b3a",
+  "file": "dog_worker.glb"
+ },
+ "ham_barrel": {
+  "id": "ham_barrel",
+  "faction": "hamsters",
+  "name": "Хомяк-тяжеловес в бочке-доспехе",
+  "role": "elite",
+  "species": "hamster",
+  "scale": 1.1,
+  "tris": 8078,
+  "bones": 27,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.271,
+  "height": 0.936,
+  "team_default": "#c0592f",
+  "file": "ham_barrel.glb"
+ },
+ "ham_hero_puhloshek": {
+  "id": "ham_hero_puhloshek",
+  "faction": "hamsters",
+  "name": "Магистр Пухлощёк",
+  "role": "hero",
+  "species": "hamster",
+  "scale": 1.22,
+  "tris": 9380,
+  "bones": 27,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 34,
+    "seconds": 1.133,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Cast": {
+    "frames": 40,
+    "seconds": 1.333,
+    "loop": false
+   }
+  },
+  "walk_speed": 0.301,
+  "height": 1.074,
+  "team_default": "#c0592f",
+  "file": "ham_hero_puhloshek.glb"
+ },
+ "ham_militia": {
+  "id": "ham_militia",
+  "faction": "hamsters",
+  "name": "Ополченец с вилкой",
+  "role": "infantry",
+  "species": "hamster",
+  "scale": 1.0,
+  "tris": 10486,
+  "bones": 27,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.246,
+  "height": 0.757,
+  "team_default": "#c0592f",
+  "file": "ham_militia.glb"
+ },
+ "ham_slinger": {
+  "id": "ham_slinger",
+  "faction": "hamsters",
+  "name": "Пращник с семечками",
+  "role": "ranged",
+  "species": "hamster",
+  "scale": 1.0,
+  "tris": 8554,
+  "bones": 27,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 36,
+    "seconds": 1.2,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.246,
+  "height": 0.757,
+  "team_default": "#c0592f",
+  "file": "ham_slinger.glb"
+ },
+ "ham_worker": {
+  "id": "ham_worker",
+  "faction": "hamsters",
+  "name": "Хомяк-носильщик",
+  "role": "worker",
+  "species": "hamster",
+  "scale": 0.95,
+  "tris": 9108,
+  "bones": 27,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Work": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.234,
+  "height": 0.719,
+  "team_default": "#c0592f",
+  "file": "ham_worker.glb"
+ },
+ "hare_archer": {
+  "id": "hare_archer",
+  "faction": "hares",
+  "name": "Лучник-беляк",
+  "role": "ranged",
+  "species": "hare",
+  "scale": 1.0,
+  "tris": 8874,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 20,
+    "seconds": 0.667,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 36,
+    "seconds": 1.2,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.524,
+  "height": 1.327,
+  "team_default": "#a3243b",
+  "file": "hare_archer.glb"
+ },
+ "hare_hero_belyana": {
+  "id": "hare_hero_belyana",
+  "faction": "hares",
+  "name": "Княгиня Беляна",
+  "role": "hero",
+  "species": "hare",
+  "scale": 1.22,
+  "tris": 9076,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 20,
+    "seconds": 0.667,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Cast": {
+    "frames": 40,
+    "seconds": 1.333,
+    "loop": false
+   }
+  },
+  "walk_speed": 0.639,
+  "height": 1.619,
+  "team_default": "#a3243b",
+  "file": "hare_hero_belyana.glb"
+ },
+ "hare_spearman": {
+  "id": "hare_spearman",
+  "faction": "hares",
+  "name": "Копейщик-русак",
+  "role": "infantry",
+  "species": "hare",
+  "scale": 1.0,
+  "tris": 9268,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 20,
+    "seconds": 0.667,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.524,
+  "height": 1.327,
+  "team_default": "#a3243b",
+  "file": "hare_spearman.glb"
+ },
+ "hare_vityaz": {
+  "id": "hare_vityaz",
+  "faction": "hares",
+  "name": "Князь-витязь",
+  "role": "elite",
+  "species": "hare",
+  "scale": 1.08,
+  "tris": 12886,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 20,
+    "seconds": 0.667,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.566,
+  "height": 1.434,
+  "team_default": "#a3243b",
+  "file": "hare_vityaz.glb"
+ },
+ "hare_worker": {
+  "id": "hare_worker",
+  "faction": "hares",
+  "name": "Крольчонок-огородник",
+  "role": "worker",
+  "species": "hare",
+  "scale": 0.82,
+  "tris": 8268,
+  "bones": 28,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 20,
+    "seconds": 0.667,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Work": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.429,
+  "height": 1.103,
+  "team_default": "#a3243b",
+  "file": "hare_worker.glb"
+ },
+ "rat_king": {
+  "id": "rat_king",
+  "faction": "rats",
+  "name": "Крыса-Король",
+  "role": "boss",
+  "species": "rat",
+  "scale": 2.1,
+  "tris": 8296,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   },
+   "Cast": {
+    "frames": 40,
+    "seconds": 1.333,
+    "loop": false
+   }
+  },
+  "walk_speed": 0.994,
+  "height": 1.982,
+  "team_default": "#6f8a2a",
+  "file": "rat_king.glb"
+ },
+ "rat_plague_doctor": {
+  "id": "rat_plague_doctor",
+  "faction": "rats",
+  "name": "Чумной лекарь",
+  "role": "support",
+  "species": "rat",
+  "scale": 1.0,
+  "tris": 8168,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 34,
+    "seconds": 1.133,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.474,
+  "height": 0.967,
+  "team_default": "#6f8a2a",
+  "file": "rat_plague_doctor.glb"
+ },
+ "rat_raider": {
+  "id": "rat_raider",
+  "faction": "rats",
+  "name": "Крыса-оборванец",
+  "role": "infantry",
+  "species": "rat",
+  "scale": 1.0,
+  "tris": 8114,
+  "bones": 29,
+  "clips": {
+   "Idle": {
+    "frames": 72,
+    "seconds": 2.4,
+    "loop": true
+   },
+   "IdleSpecial": {
+    "frames": 120,
+    "seconds": 4.0,
+    "loop": true
+   },
+   "Walk": {
+    "frames": 18,
+    "seconds": 0.6,
+    "loop": true
+   },
+   "Attack": {
+    "frames": 30,
+    "seconds": 1.0,
+    "loop": false
+   },
+   "Hit": {
+    "frames": 14,
+    "seconds": 0.467,
+    "loop": false
+   },
+   "Death": {
+    "frames": 42,
+    "seconds": 1.4,
+    "loop": false
+   },
+   "Victory": {
+    "frames": 48,
+    "seconds": 1.6,
+    "loop": true
+   }
+  },
+  "walk_speed": 0.474,
+  "height": 0.929,
+  "team_default": "#6f8a2a",
+  "file": "rat_raider.glb"
+ }
+}

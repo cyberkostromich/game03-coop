@@ -1,0 +1,56 @@
+{
+ "id": "ham_hero_puhloshek",
+ "faction": "hamsters",
+ "name": "Магистр Пухлощёк",
+ "role": "hero",
+ "species": "hamster",
+ "scale": 1.22,
+ "tris": 9380,
+ "bones": 27,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 18,
+   "seconds": 0.6,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 34,
+   "seconds": 1.133,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  },
+  "Cast": {
+   "frames": 40,
+   "seconds": 1.333,
+   "loop": false
+  }
+ },
+ "walk_speed": 0.301,
+ "height": 1.074,
+ "team_default": "#c0592f",
+ "file": "ham_hero_puhloshek.glb"
+}
