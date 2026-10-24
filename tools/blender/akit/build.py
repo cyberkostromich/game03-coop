@@ -9,6 +9,12 @@ MATS = {
     "body": (0.78, 0.0, 0.0),
     "cloth": (0.9, 0.0, 0.0),
     "metal": (0.42, 0.75, 0.0),
+    "mail": (0.5, 0.7, 0.0),
+    "gold": (0.32, 0.6, 0.0),
+    "stone": (0.9, 0.0, 0.0),
+    "wood": (0.85, 0.0, 0.0),
+    "plaster": (0.95, 0.0, 0.0),
+    "roof": (0.75, 0.0, 0.0),
     "team": (0.62, 0.0, 0.0),
     "gloss": (0.12, 0.0, 0.0),
     "glow": (0.5, 0.0, 3.0),
@@ -40,7 +46,7 @@ def material(name, team=None):
     bsdf.inputs["Roughness"].default_value = rough
     bsdf.inputs["Metallic"].default_value = metal
     src = col.outputs["Color"]
-    if name == "team" and team is not None:
+    if name in ("team", "roof") and team is not None:
         mix = tree.nodes.new("ShaderNodeMix")
         mix.data_type = "RGBA"
         mix.blend_type = "MULTIPLY"
@@ -57,13 +63,25 @@ def material(name, team=None):
 
 
 def strip_team_tint():
-    """Before glTF export: link vertex colors straight to base color.
+    """Before glTF export: drop the preview team tint from the team material.
 
-    The team tint is re-applied as baseColorFactor by export.patch_glb.
+    The tint is re-applied as baseColorFactor by glb.patch_materials, so
+    engines can swap it per player.
     """
-    m = bpy.data.materials.get("team")
-    if m:
-        material("team", team=None)
+    for name in ("team", "roof"):
+        m = bpy.data.materials.get(name)
+        if not m:
+            continue
+        t = m.node_tree
+        mix = next((n for n in t.nodes if n.bl_idname == "ShaderNodeMix"), None)
+        if mix is None:
+            continue
+        src = mix.inputs[6].links[0].from_socket if mix.inputs[6].links else None
+        dst = [l.to_socket for l in mix.outputs[2].links]
+        t.nodes.remove(mix)
+        if src is not None:
+            for d in dst:
+                t.links.new(src, d)
 
 
 def parts_to_object(parts, name, team=None, collection=None, paint_pass=True):
@@ -99,6 +117,13 @@ def parts_to_object(parts, name, team=None, collection=None, paint_pass=True):
     me = bpy.data.meshes.new(name)
     me.from_pydata(V.tolist(), [], faces)
     me.validate(clean_customdata=False)
+    # consistent outward winding per closed island (plates, tubes, lathes)
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
     me.polygons.foreach_set("material_index", mat_idx)
     me.polygons.foreach_set("use_smooth", smooth)
     attr = me.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
@@ -116,7 +141,9 @@ def parts_to_object(parts, name, team=None, collection=None, paint_pass=True):
             for i, wi in enumerate(w):
                 if wi > 1e-4:
                     vg.add([start + i], float(wi), "REPLACE")
-    ob["ao_mask"] = np.concatenate([np.full(len(p.V), 1.0 if p.ao else 0.0) for p in parts]).tolist()
+    mask = np.concatenate([np.full(len(p.V), 1.0 if p.ao else 0.0) for p in parts]).astype(np.float32)
+    am = me.attributes.new("ao_mask", "FLOAT", "POINT")
+    am.data.foreach_set("value", mask)
     return ob
 
 
@@ -134,7 +161,7 @@ def bake_ao(ob, strength=0.75, distance=0.25, samples=48, ground=True):
     if ground:
         bpy.ops.mesh.primitive_plane_add(size=50, location=(0, 0, ob.bound_box[0][2] - 0.001))
         plane = bpy.context.active_object
-    for o in bpy.context.view_layer.objects:
+    for o in bpy.context.scene.objects:
         o.select_set(False)
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
@@ -147,7 +174,12 @@ def bake_ao(ob, strength=0.75, distance=0.25, samples=48, ground=True):
     c = np.empty(len(me.vertices) * 4, np.float32)
     col.data.foreach_get("color", c)
     c = c.reshape(-1, 4)
-    mask = np.asarray(ob.get("ao_mask", [1.0] * len(me.vertices)), np.float32)[:, None]
+    if "ao_mask" in me.attributes:
+        mask = np.empty(len(me.vertices), np.float32)
+        me.attributes["ao_mask"].data.foreach_get("value", mask)
+        mask = mask[:, None]
+    else:
+        mask = np.ones((len(me.vertices), 1), np.float32)
     k = 1 - strength * mask * (1 - a)
     c[:, :3] *= k
     col.data.foreach_set("color", c.ravel())
@@ -155,5 +187,22 @@ def bake_ao(ob, strength=0.75, distance=0.25, samples=48, ground=True):
     me.color_attributes.active_color = me.color_attributes["Col"]
     if plane:
         bpy.data.objects.remove(plane, do_unlink=True)
-    if "ao_mask" in ob:
-        del ob["ao_mask"]
+    if "ao_mask" in me.attributes:
+        me.attributes.remove(me.attributes["ao_mask"])
+
+
+def decimate_to(ob, max_tris):
+    """Collapse-decimate a mesh down to a triangle budget (keeps groups/colours)."""
+    tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+    if tris <= max_tris:
+        return tris
+    mod = ob.modifiers.new("Decimate", "DECIMATE")
+    mod.decimate_type = "COLLAPSE"
+    mod.ratio = max_tris / tris
+    mod.use_collapse_triangulate = False
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+    return sum(len(p.vertices) - 2 for p in ob.data.polygons)

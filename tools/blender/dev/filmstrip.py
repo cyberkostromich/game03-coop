@@ -8,7 +8,7 @@ a = sys.argv[sys.argv.index("--") + 1:]
 uid, clip, frames, out = a[0], a[1], [int(x) for x in a[2].split(",")], a[3]
 yaw = float(a[4]) if len(a) > 4 else 28
 build.reset_scene()
-spec, ob, arm = pipeline.assemble(uid)
+spec, ob, arm = pipeline.assemble(uid, textured=False)
 pipeline.bake_clips(spec, arm)
 h = max(v.co.z for v in ob.data.vertices)
 render.setup_render((420, 520), 12)

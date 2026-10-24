@@ -34,6 +34,7 @@ class Part:
         self.mat = mat
         self.smooth = smooth
         self.ao = True  # receives baked AO
+        self.group = None  # gear group for clipping checks ("shield.L", "helm", ...)
 
     # -- construction helpers -------------------------------------------
     def copy(self):
@@ -41,6 +42,7 @@ class Part:
         p.C = self.C.copy()
         p.weights = None if self.weights is None else {k: v.copy() for k, v in self.weights.items()}
         p.ao = self.ao
+        p.group = self.group
         return p
 
     def tf(self, loc=(0, 0, 0), rot=(0, 0, 0), scale=1.0):
@@ -91,6 +93,26 @@ class Part:
     @property
     def bounds(self):
         return self.V.min(0), self.V.max(0)
+
+
+def tagged(name, side_index=None, side_kw="side", default_side=None):
+    """Decorator: label every returned Part with a gear group (for clip checks)."""
+    import functools
+
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(*a, **k):
+            out = fn(*a, **k)
+            side = None
+            if side_index is not None:
+                side = k.get(side_kw, a[side_index] if len(a) > side_index else default_side)
+            g = name + ("." + side if side else "")
+            for p in out:
+                if getattr(p, "group", None) is None:
+                    p.group = g
+            return out
+        return wrapper
+    return deco
 
 
 def mirror_name(name):

@@ -19,28 +19,29 @@ from .rig import blend_weights, chain_weights
 @dataclass
 class Body:
     species: str
-    hip_h: float = 0.25          # hip joint height
-    hip_w: float = 0.084         # hip joint x offset
-    torso_h: float = 0.30
-    torso_w: float = 0.29
-    torso_d: float = 0.23
+    hip_h: float = 0.34          # hip joint height
+    hip_w: float = 0.095         # hip joint x offset (heroic stance)
+    torso_h: float = 0.36
+    torso_w: float = 0.34
+    torso_d: float = 0.25
     belly: float = 1.0           # >1 = rounder lower torso
     chest: float = 1.0           # >1 = broader shoulders
-    neck_h: float = 0.03
-    head_r: tuple = (0.215, 0.195, 0.2)   # rx, ry(depth), rz
-    head_drop: float = 0.06      # how far head sinks onto the torso
-    arm_r: float = 0.048
-    arm_len: float = 0.21        # shoulder -> wrist
-    paw_r: float = 0.066
-    leg_r: float = 0.057
-    foot_len: float = 0.125
+    waist: float = 0.74          # waist width relative to chest
+    neck_h: float = 0.035
+    head_r: tuple = (0.165, 0.15, 0.158)   # rx, ry(depth), rz
+    head_drop: float = 0.03      # how far head sinks onto the torso
+    arm_r: float = 0.05
+    arm_len: float = 0.36        # shoulder -> wrist
+    paw_r: float = 0.06
+    leg_r: float = 0.062
+    foot_len: float = 0.17
     foot_r: float = 0.056
     eye_size: float = 1.0
     eye_yaw: float = 30.0
     eye_pitch: float = -2.0
     eye_spacing: float = 1.0
-    tail_len: float = 0.45
-    tail_r: float = 0.028
+    tail_len: float = 0.55
+    tail_r: float = 0.03
     scale: float = 1.0
     fur: str = "ginger"
     extras: dict = field(default_factory=dict)
@@ -65,7 +66,7 @@ class Body:
 
     @property
     def shoulder_x(self):
-        return self.torso_w / 2 * 0.86 * self.chest
+        return self.torso_w / 2 * 0.97 * self.chest
 
     def joints(self):
         """World positions of every joint (rest pose, A-pose arms)."""
@@ -81,11 +82,13 @@ class Body:
         sx, sz = self.shoulder_x, self.shoulder_z
         L = self.arm_len
         j["shoulder.L"] = np.array([sx, 0.0, sz])
-        j["elbow.L"] = np.array([sx + 0.03, 0.012, sz - L * 0.5])
-        j["wrist.L"] = np.array([sx + 0.05, -0.005, sz - L])
-        j["hand_tip.L"] = j["wrist.L"] + np.array([0.008, -0.01, -self.paw_r * 1.4])
+        # heroic A-pose: arms hang outside the belt and armour bulk
+        bulk = max(0.0, self.torso_w * self.belly - 0.31)
+        j["elbow.L"] = np.array([sx + 0.075 + bulk * 0.45, 0.018, sz - L * 0.52])
+        j["wrist.L"] = np.array([sx + 0.115 + bulk * 0.7, -0.01, sz - L])
+        j["hand_tip.L"] = j["wrist.L"] + np.array([0.008, -0.012, -self.paw_r * 1.5])
         j["hip.L"] = np.array([self.hip_w, 0.0, hz])
-        j["knee.L"] = np.array([self.hip_w + 0.004, -0.01, hz * 0.5 + 0.02])
+        j["knee.L"] = np.array([self.hip_w + 0.006, -0.012, (hz + self.foot_r) * 0.5 + 0.01])
         j["ankle.L"] = np.array([self.hip_w + 0.006, 0.0, self.foot_r * 0.9])
         j["toe.L"] = np.array([self.hip_w + 0.008, -self.foot_len * 0.85, self.foot_r * 0.5])
         for k in list(j):
@@ -94,28 +97,36 @@ class Body:
                 p[0] *= -1
                 j[k[:-2] + ".R"] = p
         # tail root at the back of the pelvis
-        j["tail_root"] = np.array([0.0, self.torso_d * 0.42, hz + 0.05])
+        # tail root low at the back of the pelvis: it leaves from under the belt/plates
+        j["tail_root"] = np.array([0.0, self.torso_d * 0.4, hz - 0.035])
         return j
 
 
 SPECIES = {
-    "cat": Body("cat", fur="ginger", head_r=(0.215, 0.19, 0.195), tail_len=0.5,
-                tail_r=0.026, eye_yaw=29, eye_size=1.08),
-    "dog": Body("dog", fur="shepherd", torso_w=0.31, torso_d=0.24, chest=1.08,
-                head_r=(0.2, 0.19, 0.2), tail_len=0.26, tail_r=0.034, eye_yaw=31,
-                eye_size=0.95, leg_r=0.062, arm_r=0.052),
-    "hamster": Body("hamster", fur="golden_ham", hip_h=0.17, hip_w=0.085, torso_h=0.27,
-                    torso_w=0.36, torso_d=0.3, belly=1.25, head_r=(0.22, 0.2, 0.19),
-                    head_drop=0.09, arm_len=0.16, arm_r=0.046, leg_r=0.056, foot_len=0.11,
-                    tail_len=0.04, tail_r=0.03, eye_yaw=31, eye_size=1.02, neck_h=0.0),
-    "hare": Body("hare", fur="brown_hare", hip_h=0.29, torso_h=0.3, torso_w=0.27,
-                 torso_d=0.22, head_r=(0.185, 0.19, 0.2), foot_len=0.17, foot_r=0.045,
-                 leg_r=0.055, tail_len=0.05, tail_r=0.055, eye_yaw=36, eye_size=1.02,
-                 eye_pitch=0.0),
-    "rat": Body("rat", fur="rat", hip_h=0.24, torso_h=0.29, torso_w=0.27, torso_d=0.25,
-                belly=1.1, head_r=(0.18, 0.2, 0.17), head_drop=0.03, tail_len=0.6,
-                tail_r=0.024, eye_yaw=33, eye_size=0.85, eye_pitch=4.0),
+    "cat": Body("cat", fur="ginger", hip_h=0.56, hip_w=0.095, torso_h=0.42, torso_w=0.31,
+                head_r=(0.142, 0.128, 0.132), waist=0.64, tail_len=0.75, arm_len=0.45,
+                tail_r=0.028, eye_yaw=29, eye_size=1.0, foot_len=0.18),
+    "dog": Body("dog", fur="shepherd", hip_h=0.54, torso_h=0.43, torso_w=0.36, torso_d=0.26,
+                chest=1.06, waist=0.72, head_r=(0.146, 0.14, 0.146), tail_len=0.36, tail_r=0.04,
+                eye_yaw=31, eye_size=0.95, leg_r=0.068, arm_r=0.056, arm_len=0.45, foot_len=0.19),
+    "hamster": Body("hamster", fur="golden_ham", hip_h=0.34, hip_w=0.095, torso_h=0.4,
+                    torso_w=0.45, torso_d=0.36, belly=1.18, waist=0.92,
+                    head_r=(0.17, 0.152, 0.148), head_drop=0.05, arm_len=0.35, arm_r=0.056,
+                    leg_r=0.072, foot_len=0.17, tail_len=0.05, tail_r=0.035, eye_yaw=31,
+                    eye_size=1.0, neck_h=0.0, paw_r=0.064),
+    "hare": Body("hare", fur="brown_hare", hip_h=0.6, torso_h=0.42, torso_w=0.31,
+                 torso_d=0.23, waist=0.68, head_r=(0.138, 0.142, 0.148), foot_len=0.26,
+                 foot_r=0.052, leg_r=0.062, tail_len=0.06, tail_r=0.065, eye_yaw=36,
+                 eye_size=1.0, eye_pitch=0.0, arm_len=0.44),
+    "rat": Body("rat", fur="rat", hip_h=0.5, torso_h=0.42, torso_w=0.32, torso_d=0.28,
+                belly=1.05, waist=0.76, head_r=(0.13, 0.15, 0.124), head_drop=0.02,
+                tail_len=0.85, tail_r=0.03, eye_yaw=33, eye_size=0.85, eye_pitch=4.0,
+                arm_len=0.44, foot_len=0.19),
 }
+
+# design-space head width per species: head builders are authored at this
+# size and scaled onto the real head (keeps every feature in proportion)
+HEAD_REF = {"cat": 0.215, "dog": 0.2, "hamster": 0.22, "hare": 0.185, "rat": 0.18}
 
 
 def body_for(species, **kw):
@@ -173,6 +184,11 @@ def skeleton(b: Body):
     bones.append(("cape", (0, b.torso_d * 0.5, cz), (0, b.torso_d * 0.62, cz - 0.16), "chest"))
     bones.append(("cape_tip", (0, b.torso_d * 0.62, cz - 0.16),
                   (0, b.torso_d * 0.7, cz - 0.34), "cape"))
+    # tabard cloth chain (front of the hips); animated to ride over the leading thigh
+    tz = b.hip_h + 0.02
+    ty = -(b.torso_d * 0.5 * 1.3 + 0.05)
+    bones.append(("tabard", (0, ty, tz), (0, ty - 0.01, tz - 0.12), "hips"))
+    bones.append(("tabard_tip", (0, ty - 0.01, tz - 0.12), (0, ty - 0.02, tz - 0.26), "tabard"))
     # attachment helpers (non-deforming) for engines: weapon & head sockets
     bones.append(("socket_weapon", j["wrist.R"] + np.array([0, -0.02, -0.04]),
                   j["wrist.R"] + np.array([0, -0.1, -0.04]), "hand.R", False))
@@ -194,24 +210,44 @@ def tail_points(b):
     for i in range(n + 1):
         t = i / n
         if b.species == "cat":
-            # rises behind the body and curls the tip forward ("?" shape)
-            ang = math.radians(15 + 70 * t)
-            p = r0 + np.array([0, L * 0.55 * math.sin(math.radians(60) * t) + L * 0.2 * t,
-                               L * 0.85 * t ** 1.1])
-            p[1] -= L * 0.18 * t ** 3
+            # sweeps back and up, tip hooks over - stays well behind the back
+            p = r0 + np.array([0, L * (0.62 * t + 0.12 * math.sin(math.pi * t)), L * 0.62 * t ** 1.25])
+            p[1] -= L * 0.12 * t ** 4
         elif b.species == "rat":
             p = r0 + np.array([0, L * t, L * 0.1 * math.sin(t * math.pi) - 0.17 * t])
             p[0] = 0.08 * math.sin(t * math.pi * 1.2)
             p[2] = max(p[2], 0.03)
         elif b.species == "dog":
-            p = r0 + np.array([0, L * (0.55 * t + 0.1 * t * t), L * (0.95 * t - 0.15 * t * t)])
+            p = r0 + np.array([0, L * (0.8 * t + 0.05 * t * t), L * (0.25 * t + 0.55 * t * t)])
         else:
             p = r0 + np.array([0, L * t + 0.0, L * 0.25 * t])
         pts.append(p)
     return np.array(pts)
 
 
+def _design(b):
+    """Design-space body whose head matches the size head builders were authored at."""
+    hs = b.head_r[0] / HEAD_REF[b.species]
+    return replace(b, head_r=tuple(r / hs for r in b.head_r)), hs
+
+
+def to_head_world(b, P):
+    bd, hs = _design(b)
+    return (np.asarray(P, float) - bd.head_c) * hs + b.head_c
+
+
 def eye_pos(b, sign):
+    bd, _ = _design(b)
+    return to_head_world(b, _eye_pos_d(bd, sign))
+
+
+def ear_chain(b, sign):
+    bd, _ = _design(b)
+    e = _ear_chain_d(bd, sign)
+    return tuple(None if p is None else to_head_world(b, p) for p in e)
+
+
+def _eye_pos_d(b, sign):
     hc = b.head_c
     rx, ry, rz = b.head_r
     yaw = math.radians(b.eye_yaw * b.eye_spacing)
@@ -221,7 +257,7 @@ def eye_pos(b, sign):
     return hc + d * np.array([rx, ry, rz]) * 0.93 + np.array([0, 0, -rz * 0.08])
 
 
-def ear_chain(b, sign):
+def _ear_chain_d(b, sign):
     """(base, mid, tip-or-None) for the ear bones."""
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -259,35 +295,44 @@ def fur_colors(b):
     return base, light, dark
 
 
+_TORSO_T = np.array([0.0, 0.07, 0.22, 0.44, 0.66, 0.84, 0.94, 1.0])
+_TORSO_R = np.array([0.0, 0.74, 0.86, 0.78, 0.98, 1.0, 0.82, 0.42])
+
+
 def torso_r(b, z):
-    """(rx, ry) of the fur torso at height z (matches torso())."""
+    """(rx, ry) of the fur torso at height z: pelvis, waist, chest, shoulders."""
     z0, h = b.hip_h - 0.07, b.torso_h + 0.09
     t = min(max((z - z0) / h, 0.0), 1.0)
-    r = math.sin(math.pi * (0.06 + 0.92 * t)) ** 0.55
-    r *= (1 + (b.belly - 1) * math.sin(math.pi * min(t * 1.4, 1)) ** 2)
-    r *= 1.0 - 0.18 * t + (b.chest - 1) * t
-    return r * b.torso_w / 2, r * b.torso_d / 2
+    prof = _TORSO_R.copy()
+    prof[3] = prof[4] * b.waist + (b.belly - 1) * 0.9
+    prof[2] = max(prof[2], prof[3] * 1.04) + (b.belly - 1) * 0.5
+    prof[4:6] *= b.chest
+    r = float(np.interp(t, _TORSO_T, prof))
+    # smooth the polyline a little
+    r = 0.5 * r + 0.25 * float(np.interp(t - 0.04, _TORSO_T, prof)) + \
+        0.25 * float(np.interp(t + 0.04, _TORSO_T, prof))
+    rx = r * b.torso_w / 2
+    depth = b.torso_d / b.torso_w * (1 + 0.1 * math.sin(math.pi * min(max((t - 0.5) / 0.45, 0), 1)))
+    return rx, rx * depth
 
 
 def torso(b):
     base, light, dark = fur_colors(b)
     z0, h = b.hip_h - 0.07, b.torso_h + 0.09
     prof = []
-    n = 9
+    n = 14
     for i in range(n + 1):
-        t = i / n
-        # pear: full belly, narrower shoulders, rounded ends
-        r = math.sin(math.pi * (0.06 + 0.92 * t)) ** 0.55
-        r *= (1 + (b.belly - 1) * math.sin(math.pi * min(t * 1.4, 1)) ** 2)
-        r *= 1.0 - 0.18 * t + (b.chest - 1) * t
-        prof.append((max(r, 0.0) * b.torso_w / 2, z0 + h * t))
-    prof[0] = (0, z0)
+        z = z0 + h * i / n
+        prof.append((torso_r(b, z)[0], z))
+    prof[0] = (0, z0 - 0.005)
     prof[-1] = (0, z0 + h)
-    p = geo.lathe(prof, 16, color=base)
-    p.V[:, 1] *= b.torso_d / b.torso_w
-    p.paint(geo.patch((0, -b.torso_d * 0.5, z0 + h * 0.42), 0.17, light, 0.5,
-                      axis_scale=(0.8, 0.6, 1.25)))
-    blend_weights(p, "hips", "chest", b.hip_h + 0.02, b.hip_h + b.torso_h * 0.6)
+    p = geo.lathe(prof, 18, color=base)
+    zs = p.V[:, 2]
+    k = np.array([torso_r(b, z)[1] / max(torso_r(b, z)[0], 1e-6) for z in zs])
+    p.V[:, 1] *= k
+    p.paint(geo.patch((0, -b.torso_d * 0.5, z0 + h * 0.5), 0.17, light, 0.5,
+                      axis_scale=(0.7, 0.6, 1.4)))
+    blend_weights(p, "hips", "chest", b.hip_h + 0.03, b.hip_h + b.torso_h * 0.6)
     return [p]
 
 
@@ -348,15 +393,31 @@ def arms(b, sleeve=None, paw=None):
 
 
 def paw_parts(b, s, color):
+    """Clenched fist: palm block, rolled fingers, wrapped thumb, small claws."""
     j = b.joints()
     wr, tip = j[f"wrist.{s}"], j[f"hand_tip.{s}"]
     sign = 1 if s == "L" else -1
     r = b.paw_r
-    c = (wr + tip) / 2
-    palm = geo.ellipsoid(r * 0.9, r * 0.95, r * 1.05, 4, color).tf(c + np.array([0, -0.005, 0.005]))
-    thumb = geo.ellipsoid(r * 0.38, r * 0.38, r * 0.5, 3, color).tf(
-        c + np.array([-sign * r * 0.25, -r * 0.75, r * 0.15]))
-    return [palm.on(f"hand.{s}"), thumb.on(f"hand.{s}")]
+    d = (tip - wr) / np.linalg.norm(tip - wr)
+    c = wr + d * r * 0.85
+    bone = f"hand.{s}"
+    out = []
+    palm = geo.rbox(r * 1.45, r * 1.3, r * 1.55, r * 0.45, k=2, color=color).tf(c)
+    out.append(palm.on(bone))
+    # four finger rolls across the front (grip side faces -Y)
+    for i in range(4):
+        t = (i - 1.5) / 1.5
+        fc = c + np.array([sign * 0.0, -r * 0.62, -r * 0.1 + t * r * 0.5])
+        f = geo.capsule(r * 0.27, r * 1.15, 8, 2, color=color).tf((0, 0, -r * 0.57), rot=(0, 90, 0)).tf(fc)
+        out.append(f.on(bone))
+        cl = geo.cone(r * 0.1, r * 0.22, 5, "#f3ece0").tf(rot=(100, 0, 0)).tf(
+            fc + np.array([-sign * r * 0.42, -r * 0.22, 0]))
+        cl.ao = False
+        out.append(cl.on(bone, "gloss"))
+    th = geo.capsule(r * 0.3, r * 1.0, 8, 2, color=color).tf((0, 0, -r * 0.5), rot=(0, 75, 0)).tf(
+        c + np.array([-sign * r * 0.55, -r * 0.45, r * 0.35]))
+    out.append(th.on(bone))
+    return out
 
 
 def legs(b, pants=None, boots=None):
@@ -366,7 +427,7 @@ def legs(b, pants=None, boots=None):
     for s in ("L", "R"):
         hp, kn, an = j[f"hip.{s}"], j[f"knee.{s}"], j[f"ankle.{s}"]
         c = pants or base
-        leg = _limb_tube([hp + np.array([0, 0, 0.03]), kn, an + np.array([0, 0, 0.01])],
+        leg = _limb_tube([hp + np.array([0, 0, 0.0]), kn, an + np.array([0, 0, 0.01])],
                          b.leg_r * 1.18, b.leg_r * 0.86, c, [f"thigh.{s}", f"shin.{s}"])
         if boots:
             leg.paint(geo.where(lambda V, z=kn[2] - 0.02: V[:, 2] < z, boots))
@@ -392,10 +453,58 @@ def head(b):
     sp = b.species
     fn = {"cat": head_cat, "dog": head_dog, "hamster": head_hamster, "hare": head_hare,
           "rat": head_rat}[sp]
-    parts = fn(b)
-    parts += eyes(b)
-    parts += ears(b)
+    bd, hs = _design(b)
+    parts = fn(bd)
+    parts += eyes(bd)
+    ear_parts = ears(bd)
+    for p in ear_parts:
+        p.group = "fur.ears"
+    parts += ear_parts
+    parts += head_tufts(bd)
+    for p in parts:
+        p.V = to_head_world(b, p.V)
     return parts
+
+
+def tuft(base, direction, length, width, color, n=3, spread=25.0, curl=0.3, seed=0):
+    """Cluster of flattened, curved fur spikes (WoW-style chunky fur)."""
+    rng = np.random.default_rng(seed)
+    d = np.asarray(direction, float)
+    d /= np.linalg.norm(d)
+    up = np.array([0, 0, 1.0]) if abs(d[2]) < 0.9 else np.array([0, -1.0, 0])
+    side = np.cross(d, up)
+    side /= np.linalg.norm(side)
+    nrm = np.cross(side, d)
+    out = []
+    for i in range(n):
+        a = math.radians((i - (n - 1) / 2) * spread + rng.uniform(-6, 6))
+        di = d * math.cos(a) + side * math.sin(a)
+        L = length * rng.uniform(0.75, 1.1)
+        p0 = np.asarray(base, float) + side * (i - (n - 1) / 2) * width * 0.6
+        p1 = p0 + di * L * 0.55 + nrm * L * curl * 0.3
+        p2 = p0 + di * L + nrm * L * curl
+        pts = geo.bezier(p0, p1, p2, n=5)
+        t = geo.tube(pts, np.array([1.0, 0.85, 0.6, 0.35, 0.05]) * width, 5, color=color, squash=0.45)
+        out.append(t)
+    return out
+
+
+def head_tufts(b):
+    """Cheek ruff / brow tufts that break the head silhouette."""
+    base, light, dark = fur_colors(b)
+    hc = b.head_c
+    rx, ry, rz = b.head_r
+    out = []
+    style = b.extras.get("tufts", {"cat": "cheeks", "dog": "none", "hamster": "none",
+                                   "hare": "cheeks_small", "rat": "none"}[b.species])
+    if style in ("cheeks", "cheeks_small"):
+        k = 1.0 if style == "cheeks" else 0.7
+        for sign in (1, -1):
+            c = hc + np.array([sign * rx * 0.86, -ry * 0.25, -rz * 0.42])
+            for p in tuft(c, (sign * 1.0, 0.15, -0.55), 0.085 * k, 0.03 * k, light if b.fur != "black" else base,
+                          n=3, spread=22, curl=-0.15, seed=7 + sign):
+                out.append(p.on("head"))
+    return out
 
 
 def _skull(b, color, n=8):
@@ -425,6 +534,13 @@ def head_cat(b):
         region = lambda V: np.clip((V[:, 2] - hc[2] - rz * 0.35) / 0.03, 0, 1) * \
             np.clip((-(V[:, 1] - hc[1]) + 0.02) / 0.05, 0, 1)
         p.paint(geo.stripes(dark, axis=0, freq=55, width=0.3, phase=1.57, region=region))
+        # cheek stripes sweeping back from the eyes
+        cheek = lambda V: np.clip((np.abs(V[:, 0] - hc[0]) - rx * 0.55) / 0.03, 0, 1) * \
+            np.clip((hc[2] + rz * 0.15 - V[:, 2]) / 0.03, 0, 1) * np.clip((V[:, 1] - hc[1] + ry * 0.7) / 0.05, 0, 1)
+        p.paint(geo.stripes(dark, axis=2, freq=70, width=0.32, phase=0.4, region=cheek))
+        # darker crown fading into the face
+        p.paint(geo.patch(hc + np.array([0, ry * 0.3, rz * 0.9]), rx * 0.9, palette.mix(base, dark, 0.35),
+                          0.9, axis_scale=(1.2, 1.4, 0.7)))
     if b.fur == "siamese":
         p.paint(geo.patch(hc + np.array([0, -ry * 0.9, -rz * 0.3]), 0.55 * rx, dark, 0.7,
                           axis_scale=(1.0, 0.7, 0.9)))
@@ -620,7 +736,7 @@ def eyes(b):
     style = b.extras.get("eyes", {"cat": "cat", "rat": "glow"}.get(b.species, "round"))
     k = b.eye_size
     for s, sign in (("L", 1), ("R", -1)):
-        c = eye_pos(b, sign)
+        c = _eye_pos_d(b, sign)
         yaw = b.eye_yaw * b.eye_spacing * sign
         rot = (-(b.eye_pitch + 8), 0, yaw)
         bone = f"eye.{s}"
@@ -685,7 +801,7 @@ def ears(b):
     ear = b.extras.get("ears", {"cat": "cat", "dog": "pointy", "hamster": "round",
                                 "hare": "long", "rat": "round_big"}[b.species])
     for s, sign in (("L", 1), ("R", -1)):
-        e0, e1, e2 = ear_chain(b, sign)
+        e0, e1, e2 = _ear_chain_d(b, sign)
         bone = f"ear.{s}"
         if ear in ("cat", "pointy"):
             h = np.linalg.norm(e1 - e0) * (1.25 if ear == "cat" else 1.35)
@@ -829,16 +945,21 @@ def tail(b):
 
 
 def fur_body(b, sleeve=None, pants=None, paw=None, boots=None, skip=()):
+    def tag(ps, g):
+        for p in ps:
+            if p.group is None:
+                p.group = g
+        return ps
     parts = []
     if "torso" not in skip:
-        parts += torso(b)
-    parts += neck(b)
+        parts += tag(torso(b), "fur.torso")
+    parts += tag(neck(b), "fur.torso")
     if "head" not in skip:
-        parts += head(b)
+        parts += tag(head(b), "fur.head")
     if "arms" not in skip:
-        parts += arms(b, sleeve, paw)
+        parts += tag(arms(b, sleeve, paw), "fur.arms")
     if "legs" not in skip:
-        parts += legs(b, pants, boots)
+        parts += tag(legs(b, pants, boots), "fur.legs")
     if "tail" not in skip:
-        parts += tail(b)
+        parts += tag(tail(b), "fur.tail")
     return parts

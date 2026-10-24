@@ -9,6 +9,7 @@ import math
 
 import numpy as np
 
+from .geo import tagged
 from . import geo, palette
 from .beast import torso_r, fur_colors
 from .rig import blend_weights, chain_weights
@@ -22,41 +23,66 @@ def _ratio(b):
     return b.torso_d / b.torso_w
 
 
-def garment(b, z_bot, z_top, color, mat="cloth", inflate=1.07, flare=0.25, segs=18,
-            thick=0.015, rings=10, hips_only=False):
-    """Closed tube-shell around the torso; below the hips it becomes a skirt."""
+def garment_r(b, z, z_bot, flare=0.25, layer="cloth"):
+    """Outer radius (rx, ry) of a garment at height z (for trims that sit on it)."""
+    from .armor import layer_r
     hip = b.hip_h + 0.02
-    rx_hip = torso_r(b, hip)[0]
+    k = max(hip - z, 0.0) / max(hip - z_bot, 1e-6)
+    lrx, lry = layer_r(b, z, layer)
+    return lrx * (1 + flare * k), lry * (1 + flare * k)
+
+
+def garment(b, z_bot, z_top, color, mat="cloth", inflate=1.07, flare=0.25, segs=18,
+            thick=0.015, rings=10, hips_only=False, layer="cloth"):
+    """Closed shell around the torso; below the hips it becomes a bell skirt that
+    always clears the thighs (legs come out of the hem, never through the side)."""
+    hip = b.hip_h + 0.02
+    z_top = min(z_top, b.neck_z - 0.05, b.head_c[2] - b.head_r[2] - 0.035)
     outer = []
+    depth = []
     for i in range(rings + 1):
         z = z_bot + (z_top - z_bot) * i / rings
-        if z < hip:
-            k = (hip - z) / max(hip - z_bot, 1e-6)
-            r = rx_hip * inflate * (1 + flare * k) + 0.004
-        else:
-            r = torso_r(b, z)[0] * inflate + 0.004
+        r, ry = garment_r(b, z, z_bot, flare, layer)
         outer.append((r, z))
+        depth.append((z, ry / r))
     r_in = outer[0][0] - thick
     prof = [(max(r_in * 0.9, 0.01), min(hip, z_top)), (r_in, z_bot + thick)] + outer
     prof.append((outer[-1][0] * 0.55, z_top + 0.01))
     p = geo.lathe(prof, segs, cap_bottom=True, cap_top=True, phase=math.pi / segs, color=color)
-    p.V[:, 1] *= _ratio(b) * 1.02
+    zs = np.array([z for z, _ in depth])
+    ds = np.array([d for _, d in depth])
+    p.V[:, 1] *= np.interp(p.V[:, 2], zs, ds)
     p.mat = mat
     if hips_only:
         p.bone = "hips"
+    elif z_top <= b.hip_h + 0.1:
+        from .armor import thigh_follow
+        thigh_follow([p], b, 0.65)      # skirt: hem follows the thighs like cloth
     else:
-        blend_weights(p, "hips", "chest", b.hip_h + 0.02, b.hip_h + b.torso_h * 0.6)
+        blend_weights(p, "hips", "chest", b.hip_h + 0.1, b.hip_h + b.torso_h * 0.7)
+        # long robes: the part below the hips still drifts with the legs
+        if z_bot < b.hip_h - 0.05:
+            w = p.weights
+            low = np.clip((b.hip_h - p.V[:, 2]) / max(b.hip_h - z_bot, 1e-6), 0, 1)
+            side = np.clip(p.V[:, 0] / (b.hip_w * 1.5), -1, 1)
+            wl = 0.8 * low * np.clip(side, 0, 1)
+            wr = 0.8 * low * np.clip(-side, 0, 1)
+            p.weights = {"hips": w["hips"] * (1 - wl - wr), "chest": w["chest"] * (1 - wl - wr),
+                         "thigh.L": wl, "thigh.R": wr}
+    p.group = "garment"
     return p
 
 
-def band(b, z, color, mat="cloth", thick=0.018, inflate=1.1, segs=18, bone=None):
+def band(b, z, color, mat="cloth", thick=0.018, inflate=1.1, segs=18, bone=None, add=0.006, radius=None):
     """Torus-like band hugging the torso at height z (belts, trims)."""
-    rx = torso_r(b, max(z, b.hip_h + 0.02))[0] * inflate + 0.006
+    rx = radius[0] if radius else torso_r(b, max(z, b.hip_h + 0.02))[0] * inflate + add
     prof = []
     for a in np.linspace(-math.pi / 2, math.pi * 1.5, 9):
         prof.append((rx + thick * 0.55 * math.cos(a), z + thick * math.sin(a)))
     p = geo.lathe(prof, segs, cap_bottom=False, cap_top=False, color=color)
-    p.V[:, 1] *= _ratio(b) * 1.02
+    ryt = torso_r(b, max(z, b.hip_h + 0.02))
+    ry_ = radius[1] if radius else ryt[1] * inflate + add
+    p.V[:, 1] *= ry_ / max(rx, 1e-6)
     p.mat = mat
     if bone:
         p.bone = bone
@@ -65,30 +91,35 @@ def band(b, z, color, mat="cloth", thick=0.018, inflate=1.1, segs=18, bone=None)
     return p
 
 
+@tagged("belt")
 def belt(b, leather, buckle=palette.GOLD, z=None, pouch=None):
-    z = b.hip_h + 0.035 if z is None else z
-    out = [band(b, z, leather, "body", thick=0.022, inflate=1.12)]
-    ry = torso_r(b, z)[1] * 1.12 * 1.02 + 0.016
+    """Belt on the 'belt' torso layer, above the fauld."""
+    z = b.hip_h + 0.065 if z is None else z
+    from .armor import layer_r
+    lrx, lry = layer_r(b, z, "belt")
+    out = [band(b, z, leather, "body", thick=0.03, inflate=1.0, add=0.0, radius=(lrx, lry))]
+    ry = lry + 0.016
     bk = geo.rbox(0.05, 0.02, 0.042, 0.006, color=buckle).tf((0, -ry, z))
     out.append(bk.on("hips", "metal"))
     if pouch:
-        rx = torso_r(b, z)[0] * 1.12
-        pc = geo.rbox(0.06, 0.04, 0.07, 0.015, color=pouch).tf((rx * 0.72, -ry * 0.62, z - 0.045),
+        rx = lrx
+        pc = geo.rbox(0.06, 0.04, 0.07, 0.015, color=pouch).tf((rx * 0.78, -ry * 0.68, z - 0.05),
                                                                  rot=(0, 0, 30))
         out.append(pc.on("hips"))
     return out
 
 
 def front_panel(b, z_top, z_bot, half_w, color, mat="team", depth=0.012, tip="point",
-                side=-1, inflate=1.14, bone_blend=True, n=10, m=7):
-    """A tabard / apron panel curved over the front (side=-1) or back (+1)."""
+                side=-1, inflate=None, bone_blend=True, n=10, m=7, layer="over"):
+    """A tabard / apron panel curved over the front (side=-1) or back (+1) on a torso layer."""
+    from .armor import layer_r, thigh_follow
+    z_top = min(z_top, b.neck_z - 0.06)
     secs = []
     for i in range(n + 1):
         t = i / n
         z = z_top + (z_bot - z_top) * t
-        zz = max(z, b.hip_h + 0.02)
-        rx, ry = torso_r(b, zz)
-        rx, ry = rx * inflate + 0.01, ry * inflate * 1.02 + 0.01
+        rx, ry = layer_r(b, z, layer)
+        rx, ry = rx + 0.004, ry + 0.004
         w = half_w
         if tip == "point" and t > 0.7:
             w = half_w * (1 - (t - 0.7) / 0.3 * 0.85)
@@ -106,26 +137,37 @@ def front_panel(b, z_top, z_bot, half_w, color, mat="team", depth=0.012, tip="po
     p = geo.loft(secs, color=color)
     p.mat = mat
     if bone_blend:
-        blend_weights(p, "hips", "chest", b.hip_h + 0.02, b.hip_h + b.torso_h * 0.6)
+        blend_weights(p, "hips", "chest", b.hip_h + 0.1, b.hip_h + b.torso_h * 0.7)
+        if z_bot < b.hip_h - 0.03:
+            w = p.weights
+            low = np.clip((b.hip_h - p.V[:, 2]) / max(b.hip_h - z_bot, 1e-6), 0, 1)
+            side_ = np.clip(p.V[:, 0] / (b.hip_w * 1.5), -1, 1)
+            wl = 0.6 * low * np.clip(side_, 0, 1) + 0.3 * low * (1 - abs(side_))
+            wr = 0.6 * low * np.clip(-side_, 0, 1) + 0.3 * low * (1 - abs(side_))
+            p.weights = {"hips": w["hips"] * (1 - wl - wr), "chest": w["chest"] * (1 - wl - wr),
+                         "thigh.L": wl, "thigh.R": wr}
+    p.group = "panel"
     return p
 
 
+@tagged("cape")
 def cape(b, color, length=None, width=1.0, mat="team", lining=None, collar=None):
     """Cape hanging from the shoulders, skinned on chest -> cape -> cape_tip."""
-    zt = b.shoulder_z + 0.02
+    zt = b.shoulder_z - 0.03
     zb = 0.08 if length is None else zt - length
     n, m = 12, 9
     secs = []
     for i in range(n + 1):
         t = i / n
         z = zt + (zb - zt) * t
-        zz = min(max(z, b.hip_h + 0.05), b.neck_z)
-        rx, ry = torso_r(b, zz)
+        zz = min(max(z, b.hip_h + 0.05), b.neck_z - 0.04)
+        from .armor import layer_r
+        rx, ry = layer_r(b, zz, "over")
         flare = 1 + 0.45 * t
-        rx = (rx * 1.18 + 0.02) * flare * width
-        ry = ry * 1.2 + 0.02 + 0.06 * t ** 1.3
+        rx = (rx + 0.02) * flare * width
+        ry = ry + 0.045 + 0.09 * t ** 1.3
         front, back = [], []
-        span = math.radians(105 + 20 * t)
+        span = math.radians(56 + 36 * t)
         for a in np.linspace(-span, span, m):
             x = rx * math.sin(a)
             y = ry * math.cos(a)
@@ -253,6 +295,7 @@ def boots(b, color, mat="body", cuff=None):
     return out
 
 
+@tagged("scarf")
 def scarf(b, color, mat="team", tails=True):
     z = b.neck_z - 0.005
     rx, ry = torso_r(b, z - 0.02)
@@ -269,6 +312,7 @@ def scarf(b, color, mat="team", tails=True):
     return out
 
 
+@tagged("collar")
 def collar(b, leather, spikes=None, tag=None):
     z = b.neck_z + 0.0
     rx, ry = torso_r(b, z - 0.03)
@@ -290,9 +334,11 @@ def collar(b, leather, spikes=None, tag=None):
     return out
 
 
+@tagged("backpack")
 def backpack(b, color, strap=palette.LEATHER, size=1.0, kind="sack"):
+    from .armor import layer_r
     z = b.hip_h + b.torso_h * 0.6
-    ry = torso_r(b, z)[1]
+    ry = max(layer_r(b, zz, "over")[1] for zz in np.linspace(z - 0.15, z + 0.15, 7)) + 0.03
     out = []
     if kind == "sack":
         s = geo.qsphere(1.0, 5, color).tf(scale=(0.16 * size, 0.12 * size, 0.17 * size))
@@ -304,13 +350,13 @@ def backpack(b, color, strap=palette.LEATHER, size=1.0, kind="sack"):
         out += [s.on("chest"), tie.on("chest"), knot.on("chest")]
     elif kind == "quiver":
         q = geo.cyl(0.045, 0.3, 10, r_top=0.05, color=color)
-        q.tf((0, 0, -0.12), rot=(0, -28, 0)).tf((0.03, ry + 0.06, z + 0.05))
+        q.tf((0, 0, -0.12), rot=(0, -18, 0)).tf((0.03, ry + 0.075, z + 0.05))
         out.append(q.on("chest"))
         for i, dx in enumerate((-0.015, 0.0, 0.017)):
-            ar = geo.cyl(0.005, 0.12, 5, color=palette.WOOD).tf((dx, 0, 0.15), rot=(0, -28, 0)).tf(
-                (0.03, ry + 0.06, z + 0.05))
+            ar = geo.cyl(0.005, 0.12, 5, color=palette.WOOD).tf((dx, 0, 0.15), rot=(0, -18, 0)).tf(
+                (0.03, ry + 0.075, z + 0.05))
             fl = geo.extrude([(-0.012, 0), (0.012, 0), (0.006, 0.05), (-0.006, 0.05)], 0.003,
-                             "#f2efe6").tf((dx, 0, 0.23), rot=(0, -28, 0)).tf((0.03, ry + 0.06, z + 0.05))
+                             "#f2efe6").tf((dx, 0, 0.23), rot=(0, -18, 0)).tf((0.03, ry + 0.075, z + 0.05))
             out += [ar.on("chest"), fl.on("chest")]
     # straps
     rx = torso_r(b, z)[0]
@@ -352,6 +398,7 @@ def _dome(b, inflate, cut, color, peak=1.0, segs=18, n=7, front_lift=0.0):
     return p
 
 
+@tagged("hat")
 def helm_kettle(b, metal, brim=1.45, mat="metal", plume=None):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -367,6 +414,7 @@ def helm_kettle(b, metal, brim=1.45, mat="metal", plume=None):
     return out
 
 
+@tagged("hat")
 def helm_nasal(b, metal, mat="metal", trim=None, nasal=True, aventail=None, spike=True):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -398,6 +446,7 @@ def helm_nasal(b, metal, mat="metal", trim=None, nasal=True, aventail=None, spik
     return out
 
 
+@tagged("hat")
 def helm_shishak(b, metal, ear_guards=True, mat="metal", trim=palette.GOLD, plume=None):
     """Rus' pointed helm; hares get ear sleeves going up their ears."""
     out = helm_nasal(b, metal, mat, trim=trim, nasal=True, spike=True)
@@ -418,6 +467,7 @@ def helm_shishak(b, metal, ear_guards=True, mat="metal", trim=palette.GOLD, plum
     return out
 
 
+@tagged("hat")
 def helm_sallet(b, metal, mat="metal", trim=None, plume=None):
     """Light open helm sitting high on the skull with a flared tail at the back."""
     hc = b.head_c
@@ -446,6 +496,7 @@ def helm_sallet(b, metal, mat="metal", trim=None, plume=None):
     return out
 
 
+@tagged("hat")
 def helm_great(b, metal, mat="metal", visor_up=True, trim=palette.GOLD, crest=None):
     """Bascinet with raised visor: face visible (bulldog guard)."""
     hc = b.head_c
@@ -488,7 +539,8 @@ def _plume(b, color, big=False):
     return [p.on("head")]
 
 
-def hood(b, color, mat="team", mantle=True, open_face=0.78, point=0.0):
+@tagged("hat")
+def hood(b, color, mat="team", mantle=False, open_face=0.78, point=0.0):
     hc = b.head_c
     rx, ry, rz = b.head_r
     p = geo.qsphere(1.0, 8, color)
@@ -514,6 +566,7 @@ def hood(b, color, mat="team", mantle=True, open_face=0.78, point=0.0):
     return out
 
 
+@tagged("hat")
 def straw_hat(b, color=palette.STRAW, band_c="#a33a2a", brim=1.7):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -531,6 +584,7 @@ def straw_hat(b, color=palette.STRAW, band_c="#a33a2a", brim=1.7):
     return out
 
 
+@tagged("hat")
 def cap(b, color, feather=None, mat="team", tilt=-12):
     """Soft beret / kolpak with optional feather."""
     hc = b.head_c
@@ -554,6 +608,7 @@ def cap(b, color, feather=None, mat="team", tilt=-12):
     return out
 
 
+@tagged("hat")
 def fur_hat(b, color, fur="#f2ece0", mat="team"):
     """Kolpak with fur trim (hare archers, princes)."""
     hc = b.head_c
@@ -570,6 +625,7 @@ def fur_hat(b, color, fur="#f2ece0", mat="team"):
     return out
 
 
+@tagged("hat")
 def crown(b, gold=palette.GOLD, gem="#c0283c", points=6, h=0.07, r_scale=0.72, tilt=0.0):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -600,6 +656,7 @@ def crown(b, gold=palette.GOLD, gem="#c0283c", points=6, h=0.07, r_scale=0.72, t
     return out
 
 
+@tagged("hat")
 def kokoshnik(b, color, gold=palette.GOLD, pearl="#fbf6ea"):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -620,6 +677,7 @@ def kokoshnik(b, color, gold=palette.GOLD, pearl="#fbf6ea"):
     return out
 
 
+@tagged("hat")
 def bandana(b, color, mat="team"):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -636,6 +694,7 @@ def bandana(b, color, mat="team"):
     return out
 
 
+@tagged("hat")
 def merchant_hat(b, color, trim=palette.GOLD):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -654,6 +713,7 @@ def merchant_hat(b, color, trim=palette.GOLD):
     return [p.on("head", "team"), rim.on("head", "metal")]
 
 
+@tagged("hat")
 def wide_hat(b, color, brim=1.9):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -664,6 +724,7 @@ def wide_hat(b, color, brim=1.9):
     return [p.on("head", "cloth")]
 
 
+@tagged("hat")
 def beak_mask(b, color="#e8dcc0", lens="#9fe04a"):
     hc = b.head_c
     rx, ry, rz = b.head_r
@@ -695,20 +756,29 @@ def sword(length=0.56, width=0.095, steel=palette.STEEL, guard=palette.GOLD, gri
           pommel=None):
     """Oversized chunky sword (Blizzard proportions: ~1.5x realistic)."""
     parts = [_grip(0.11, 0.02, grip)]
-    gd = geo.rbox(0.2, 0.045, 0.04, 0.014, color=guard).tf((0, 0, 0.08))
+    gd = geo.rbox(0.24, 0.05, 0.045, 0.016, color=guard).tf((0, 0, 0.08))
     gd.deform(lambda V: V + np.column_stack([np.zeros(len(V)), np.zeros(len(V)),
                                              0.25 * (V[:, 0] ** 2) * 4]))
-    parts.append(gd.on(None, "metal"))
+    parts.append(gd.on(None, "gold"))
     for s in (1, -1):
-        parts.append(geo.qsphere(0.022, 2, guard).tf((s * 0.1, 0, 0.09)).on(None, "metal"))
+        parts.append(geo.cone(0.026, 0.05, 6, guard).tf(rot=(0, s * 70, 0)).tf((s * 0.11, 0, 0.1)).on(None, "gold"))
     gem = geo.qsphere(0.016, 2, "#c0283c").tf((0, -0.022, 0.08))
     parts.append(gem.on(None, "gloss"))
     pm = geo.qsphere(0.032, 3, pommel or guard).tf((0, 0, -0.05))
-    parts.append(pm.on(None, "metal"))
+    parts.append(pm.on(None, "gold"))
     bl = geo.blade(length, width, 0.026, tip=0.2, color=steel).tf((0, 0, 0.095), rot=(0, 0, 90))
     bl.paint(geo.patch((0, 0, 0.095 + length * 0.4), length * 0.42, palette.mul(steel, 0.72), 0.5,
                        axis_scale=(0.15, 0.25, 1)))
     parts.append(bl.on(None, "metal"))
+    # gold inlay running up the fuller on both faces
+    for side in (-1, 1):
+        inl = geo.tube([(0, side * 0.0135, 0.11), (0, side * 0.0135, 0.11 + length * 0.35)],
+                       [0.007, 0.004], 5, color=guard, squash=0.4)
+        parts.append(inl.on(None, "gold"))
+    # leather wrap rings on the grip
+    for zz in np.linspace(-0.015, 0.06, 4):
+        parts.append(geo.lathe([(0.021, zz - 0.006), (0.024, zz), (0.021, zz + 0.006)], 8,
+                               cap_bottom=False, cap_top=False, color="#3a2418").on(None, "body"))
     return parts
 
 
@@ -1027,6 +1097,7 @@ def emblem(faction, color, scale=1.0):
     return out
 
 
+@tagged("emblem")
 def chest_emblem(b, faction, color, z=None, inflate=1.2, scale=0.9):
     z = b.hip_h + b.torso_h * 0.62 if z is None else z
     ry = torso_r(b, z)[1] * inflate * 1.02 + 0.026
@@ -1047,6 +1118,7 @@ def _hand_center(b, s):
     return (j[f"wrist.{s}"] + j[f"hand_tip.{s}"]) / 2
 
 
+@tagged("weapon", 2, default_side="R")
 def in_hand(b, parts, side="R", rot=(90, 0, 0), offset=(0, 0, 0), extra_rot=(0, 0, 0), scale=1.0):
     """Mount weapon parts (built along +Z) in a hand. Pointing forward at rest."""
     c = _hand_center(b, side)
@@ -1064,22 +1136,41 @@ def in_hand(b, parts, side="R", rot=(90, 0, 0), offset=(0, 0, 0), extra_rot=(0, 
     return out
 
 
-def on_forearm(b, parts, side="L", out_offset=0.08):
-    """Strap a shield (built facing -Y, up +Z) on the outside of a forearm."""
+@tagged("shield", 2, default_side="L")
+def on_forearm(b, parts, side="L", out_offset=None, along=0.78):
+    """Strap a shield (built facing -Y, up +Z) flat against the outside of the forearm.
+
+    It rides parallel to the forearm, clear of the vambrace, centred low enough
+    that its top stays below the elbow cop and the pauldron.
+    """
     j = b.joints()
     el, wr = j[f"elbow.{side}"], j[f"wrist.{side}"]
-    c = el + (wr - el) * 0.55
     sign = 1 if side == "L" else -1
+    zmax = max(p.V[:, 2].max() for p in parts)
+    L2 = np.linalg.norm(wr - el)
+    along = max(along, (zmax + 0.03) / L2)     # shield top stays below the elbow cop
+    c = el + (wr - el) * along
+    if out_offset is None:
+        out_offset = b.arm_r * 1.75 + 0.11
+    # frame aligned with the forearm: up = toward the elbow, face = outward
+    up = (el - wr) / np.linalg.norm(el - wr)
+    face = np.array([sign * 1.0, 0, 0]) - up * (sign * up[0])
+    face /= np.linalg.norm(face)
+    xa = np.cross(up, face)          # local +X
+    R = np.column_stack([xa, -face, up])   # local (x, y, z) -> world; local -Y is the face
     out = []
     for p in parts:
         q = p.copy()
-        q.tf(rot=(90, -90 * sign, -35 * sign))
-        q.tf(c + np.array([sign * out_offset, 0, 0]))
+        q.V = q.V @ R.T + c + face * out_offset
+        if np.linalg.det(R) < 0:
+            q.F = [tuple(reversed(f)) for f in q.F]
         q.bone = f"forearm.{side}"
+        q.weights = None
         out.append(q)
     return out
 
 
+@tagged("back")
 def on_back(b, parts, rot=(0, 0, 0), offset=(0, 0, 0)):
     z = b.hip_h + b.torso_h * 0.55
     ry = torso_r(b, z)[1]
@@ -1093,6 +1184,7 @@ def on_back(b, parts, rot=(0, 0, 0), offset=(0, 0, 0)):
     return out
 
 
+@tagged("hip")
 def on_hip(b, parts, side="L", rot=(0, 0, 0)):
     z = b.hip_h + 0.02
     rx, ry = torso_r(b, z + 0.02)

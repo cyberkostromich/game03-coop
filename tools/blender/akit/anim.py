@@ -28,6 +28,7 @@ class Pose(dict):
         super().__init__()
         self.loc = {}
         self.scale = {}
+        self.q = {}      # explicit world-axis quaternions (from IK); override angles
 
     def rot(self, bone, pitch=0.0, yaw=0.0, roll=0.0):
         p, y, r = self.get(bone, (0.0, 0.0, 0.0))
@@ -112,7 +113,8 @@ def bake_clip(arm_ob, name, frames, pose_fn, step=1, loop=True, loc_scale=1.0):
         if loop and f == frames:
             t = 0.0
         samples.append((f, pose_fn(t)))
-        animated |= set(samples[-1][1].keys()) | set(samples[-1][1].loc) | set(samples[-1][1].scale)
+        animated |= (set(samples[-1][1].keys()) | set(samples[-1][1].loc) | set(samples[-1][1].scale)
+                     | set(samples[-1][1].q))
     for f, pose in samples:
         for bname in animated:
             pb = bones.get(bname)
@@ -120,8 +122,11 @@ def bake_clip(arm_ob, name, frames, pose_fn, step=1, loop=True, loc_scale=1.0):
                 continue
             m = rest[bname]
             mi = m.inverted()
-            p, y, r = pose.get(bname, (0.0, 0.0, 0.0))
-            qw = _world_quat(p, y, r)
+            if bname in pose.q:
+                qw = pose.q[bname]
+            else:
+                p, y, r = pose.get(bname, (0.0, 0.0, 0.0))
+                qw = _world_quat(p, y, r)
             ql = (mi @ qw.to_matrix() @ m).to_quaternion()
             pb.rotation_quaternion = ql
             pb.keyframe_insert("rotation_quaternion", frame=f + 1, group=bname)

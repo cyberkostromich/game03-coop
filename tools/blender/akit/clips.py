@@ -9,6 +9,8 @@ import math
 
 from .anim import Pose, back_out, ease_in, ease_out, keys, seg, smooth, wave
 from .beast import tail_bones
+import numpy as np
+from mathutils import Quaternion, Vector
 
 TAU = 2 * math.pi
 
@@ -50,8 +52,8 @@ def stance(c, p=None, k=1.0):
     s = c.style
     p.rot("chest", c.posture * 0.8).rot("neck", -c.posture * 0.5).rot("head", -c.posture * 0.3)
     # relaxed defaults
-    arm = {"upper_arm.L": (-8, 0, 6), "forearm.L": (-22, 0, 0),
-           "upper_arm.R": (-8, 0, -6), "forearm.R": (-22, 0, 0)}
+    arm = {"upper_arm.L": (-8, 0, 16), "forearm.L": (-22, 0, 0),
+           "upper_arm.R": (-8, 0, -16), "forearm.R": (-22, 0, 0)}
     if s in ("sword", "mace", "sabre"):
         arm["upper_arm.R"] = (-18, -8, -14)
         arm["forearm.R"] = (-62, 0, 0)
@@ -88,8 +90,9 @@ def stance(c, p=None, k=1.0):
         arm["upper_arm.L"] = (-20, 0, 8)
         arm["forearm.L"] = (-60, 0, 0)
     if c.shield:
-        arm["upper_arm.L"] = (-22, -14, 12)
-        arm["forearm.L"] = (-68, -10, 0)
+        # shield carried at the side, face out: keeps the body readable
+        arm["upper_arm.L"] = (-8, 0, 20)
+        arm["forearm.L"] = (-30, 0, 0)
     for bone, (pp, yy, rr) in arm.items():
         p.rot(bone, pp * k, yy * k, rr * k)
     if s in ("sword", "thrust", "dagger2", "mace", "sabre"):
@@ -105,11 +108,75 @@ def stance(c, p=None, k=1.0):
     return p
 
 
+def _qrot(a, b):
+    """Minimal rotation taking direction a to direction b."""
+    a, b = Vector(a).normalized(), Vector(b).normalized()
+    return a.rotation_difference(b)
+
+
+def arm_ik(p, c, side, target, pole=(0.0, 0.6, -0.4), blade=None):
+    """Two-bone IK for an arm, in the chest's rest frame (world axes, metres).
+
+    target: wrist position relative to the shoulder joint. pole: where the elbow
+    should point. blade: desired weapon direction (weapons rest pointing -Y).
+    Writes explicit quaternions for upper_arm, forearm and hand.
+    """
+    j = c.b.joints()
+    S, E0, W0 = (Vector(j[f"{k}.{side}"]) for k in ("shoulder", "elbow", "wrist"))
+    L1, L2 = (E0 - S).length, (W0 - E0).length
+    T = Vector(target)
+    d = min(max(T.length, abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999)
+    dirT = T.normalized()
+    cos_a = (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d)
+    a = math.acos(min(max(cos_a, -1.0), 1.0))
+    pole_v = Vector(pole)
+    perp = (pole_v - dirT * pole_v.dot(dirT))
+    if perp.length < 1e-6:
+        perp = Vector((0, 0, -1)) - dirT * (-dirT.z)
+    perp.normalize()
+    elbow = dirT * (L1 * math.cos(a)) + perp * (L1 * math.sin(a))
+    wrist = dirT * d
+    u0 = (E0 - S).normalized()
+    f0 = (W0 - E0).normalized()
+    q1 = _qrot(u0, elbow)
+    q2 = _qrot(q1 @ f0, (wrist - elbow).normalized())
+    p.q[f"upper_arm.{side}"] = q1
+    p.q[f"forearm.{side}"] = q1.inverted() @ q2 @ q1   # expressed in the arm's rest axes
+    # combined forearm world rotation = q2 @ q1
+    if blade is not None:
+        qa = q2 @ q1
+        w0 = Vector((0, -1, 0))
+        qh = _qrot(qa @ w0, Vector(blade))
+        local = qa.inverted() @ qh @ qa
+        lim = math.radians(38)              # wrists don't fold into the vambrace
+        if local.angle > lim:
+            local = Quaternion().slerp(local, lim / local.angle)
+        p.q[f"hand.{side}"] = local
+    return p
+
+
+def blend_fk_ik(p, side, w, bones=("upper_arm", "forearm", "hand")):
+    """Slerp each arm bone between its FK stance angles and the IK quaternion."""
+    from .anim import _world_quat
+    for b in bones:
+        name = f"{b}.{side}"
+        if name not in p.q:
+            continue
+        fk = _world_quat(*p.get(name, (0.0, 0.0, 0.0)))
+        p.q[name] = fk.slerp(p.q[name], w)
+    return p
+
+
+def lerp3(a, b, u):
+    return tuple(x + (y - x) * u for x, y in zip(a, b))
+
+
 def secondary(p, c, t, cycles=1, energy=1.0, ear_lag=0.12):
     """Tails, ears, cape: phase-delayed overlapping motion."""
+    te = min(energy, 1.0)          # tails never whip into gear
     for i, tb in enumerate(c.tail):
-        amp = (7 + 4 * i) * energy
-        p.rot(tb, 3 * energy * wave(t, cycles, -0.1 * i), amp * wave(t, cycles, 0.25 - 0.13 * i), 0)
+        amp = (6 + 3 * i) * te
+        p.rot(tb, 3 * te * wave(t, cycles, -0.1 * i), amp * wave(t, cycles, 0.25 - 0.13 * i), 0)
     for s in ("L", "R"):
         sgn = 1 if s == "L" else -1
         p.rot(f"ear.{s}", 2.5 * energy * wave(t, cycles * 2, -ear_lag), 0, -sgn * 1.5 * energy * wave(t, cycles, 0.3))
@@ -165,9 +232,9 @@ def idle_special(c):
         e = smooth(seg(t, 0.0, 0.18)) * (1 - smooth(seg(t, 0.8, 1.0)))
         if sp == "groom":       # cat licks its paw then wipes its ear
             lick = math.sin(TAU * 4 * t) * 0.5 + 0.5
-            p.rot("upper_arm.L", -62 * e, -28 * e, -6 * e).rot("forearm.L", -82 * e, -20 * e, 0)
-            p.rot("hand.L", -30 * e, 0, 0)
-            p.rot("head", 14 * e + 6 * e * lick, -14 * e, 8 * e).rot("neck", 6 * e)
+            p.rot("upper_arm.L", -46 * e, -16 * e, 2 * e).rot("forearm.L", -62 * e, -12 * e, 0)
+            p.rot("hand.L", -20 * e, 0, 0)
+            p.rot("head", 8 * e + 4 * e * lick, -18 * e, 8 * e).rot("neck", 4 * e)
             eyes_closed(p, e * 0.9)
             p.rot("jaw", 8 * e * lick)
         elif sp == "sniff":     # dog sniffs the ground and wags hard
@@ -178,8 +245,8 @@ def idle_special(c):
                 p.rot(tb, 10 * e, 30 * e * math.sin(TAU * 8 * t - i * 0.7), 0)
         elif sp == "stuff":     # hamster stuffs its cheeks
             chew = math.sin(TAU * 5 * t)
-            p.rot("upper_arm.L", -50 * e, -30 * e, 0).rot("forearm.L", -95 * e, -25 * e, 0)
-            p.rot("upper_arm.R", -50 * e, 30 * e, 0).rot("forearm.R", -95 * e, 25 * e, 0)
+            p.rot("upper_arm.L", -34 * e, -12 * e, 12 * e).rot("forearm.L", -58 * e, -14 * e, 0)
+            p.rot("upper_arm.R", -34 * e, 12 * e, -12 * e).rot("forearm.R", -58 * e, 14 * e, 0)
             p.rot("head", -6 * e)
             puff = 1 + 0.35 * smooth(seg(t, 0.25, 0.55)) * (1 - smooth(seg(t, 0.8, 1.0))) + 0.04 * chew * e
             p.size("cheeks", puff, puff, puff)
@@ -196,13 +263,20 @@ def idle_special(c):
             p.rot("head", 0, 15 * math.sin(TAU * t) * e)
         elif sp == "scheme":    # rat rubs its paws together
             rub = math.sin(TAU * 6 * t)
-            p.rot("upper_arm.L", -45 * e, -25 * e, 0).rot("forearm.L", -70 * e, -35 * e + 8 * rub * e, 0)
-            p.rot("upper_arm.R", -45 * e, 25 * e, 0).rot("forearm.R", -70 * e, 35 * e + 8 * rub * e, 0)
+            p.rot("upper_arm.L", -24 * e, -10 * e, 12 * e).rot("forearm.L", -46 * e, -24 * e + 6 * rub * e, 0)
+            p.rot("upper_arm.R", -24 * e, 10 * e, -12 * e).rot("forearm.R", -46 * e, 24 * e + 6 * rub * e, 0)
             p.rot("head", 0, 20 * math.sin(TAU * 1.5 * t) * e)
             p.rot("chest", 8 * e)
-        elif sp == "proud":     # hero: chin up, chest out, cape sways
-            p.rot("chest", -6 * e).rot("head", -10 * e, 12 * math.sin(TAU * t) * e)
-            p.rot("upper_arm.L", 0, 0, 20 * e).rot("forearm.L", -100 * e, -40 * e, 0)
+        elif sp == "flourish":  # armoured: wrist circles with the weapon, shoulder roll, glare
+            spin = TAU * 2 * smooth(seg(t, 0.15, 0.75))
+            p.rot("forearm.R", -8 * e)
+            p.rot("hand.R", 18 * e * math.sin(spin), 0, 24 * e * math.cos(spin))
+            p.rot("chest", 0, 10 * e * math.sin(TAU * t), 0).rot("head", -4 * e, -14 * e * math.sin(TAU * t))
+            roll = math.sin(math.pi * seg(t, 0.75, 0.95))
+            p.rot("upper_arm.L", 0, 0, 6 * roll).rot("upper_arm.R", 0, 0, -6 * roll)
+        elif sp == "proud":     # hero: chin up, chest out, slow look across the field
+            p.rot("chest", -6 * e).rot("head", -8 * e, 14 * math.sin(TAU * t) * e)
+            p.rot("upper_arm.L", 0, 0, 6 * e).rot("upper_arm.R", 0, 0, -6 * e)
         secondary(p, c, t, 1, 0.9)
         if sp not in ("groom",):
             blink(p, t, 0.3)
@@ -225,9 +299,9 @@ def walk(c):
         p.rot("thigh.L", -A * cp).rot("thigh.R", A * cp)
         swingL = max(0.0, -sp)
         swingR = max(0.0, sp)
-        p.rot("shin.L", 52 * swingL ** 1.2 + 6).rot("shin.R", 52 * swingR ** 1.2 + 6)
-        p.rot("foot.L", -0.5 * (-A * cp) - 22 * swingL + 8 * max(cp, 0) * 0)
-        p.rot("foot.R", -0.5 * (A * cp) - 22 * swingR)
+        p.rot("shin.L", 44 * swingL ** 1.2 + 6).rot("shin.R", 44 * swingR ** 1.2 + 6)
+        p.rot("foot.L", -0.3 * (-A * cp) - 12 * swingL)
+        p.rot("foot.R", -0.3 * (A * cp) - 12 * swingR)
         bob = 0.5 - 0.5 * math.cos(2 * ph)
         p.move("hips", z=0.016 * bob - 0.006)
         sway = {"waddle": 9, "skitter": 3}.get(kind, 4)
@@ -300,7 +374,7 @@ def attack(c):
     if s in ("tool",):
         return _attack_swing(c, overhead=True)
     if s in ("staff", "lantern"):
-        return _attack_staff(c)
+        return _attack_swing(c, overhead=True)
     return _attack_swing(c)
 
 
@@ -332,63 +406,110 @@ def key_poses(p, t, kf, ease=smooth):
     return p
 
 
-def _attack_swing(c, overhead=False):
-    if overhead:
-        wind = {"upper_arm.R": (-30, 0, -115), "forearm.R": (-20, 0, -45), "hand.R": (60, 0, 0),
-                "chest": (-14, -10, 0), "head": (-8, 0, 0), "hips": (0, -6, 0),
-                "upper_arm.L": (-30, 0, 10)}
-        hit = {"upper_arm.R": (-70, -10, -6), "forearm.R": (0, 0, 0), "hand.R": (40, 0, 0),
-               "chest": (26, 8, 0), "head": (8, 0, 0), "hips": (6, 6, 0),
-               "upper_arm.L": (10, 0, 6), "thigh.L": (-26, 0, 0), "shin.L": (26, 0, 0),
-               "thigh.R": (16, 0, 0), "shin.R": (12, 0, 0), "jaw": (18, 0, 0)}
-        follow = dict(hit, chest=(30, 10, 0), **{"upper_arm.R": (-50, -12, 0), "hand.R": (55, 0, 0)})
-        hit_loc = {"hips": (0, -0.05, -0.03)}
+def ik_track(t, keys, ease=smooth, bulge=None):
+    """Interpolate IK targets [(t, wrist, blade, pole), ...]; optional outward arc."""
+    if t <= keys[0][0]:
+        k0 = k1 = keys[0]
+        u = 0.0
+    elif t >= keys[-1][0]:
+        k0 = k1 = keys[-1]
+        u = 0.0
     else:
-        wind = {"upper_arm.R": (-25, 0, -108), "forearm.R": (-30, 0, -42), "hand.R": (45, 0, 0),
-                "chest": (-8, -28, -4), "head": (-6, 14, 0), "hips": (0, -12, 0),
-                "upper_arm.L": (-20, -10, 8), "thigh.R": (6, 0, 0)}
-        hit = {"upper_arm.R": (-72, -38, -8), "forearm.R": (-6, 0, 0), "hand.R": (52, 0, 10),
-               "chest": (16, 34, 4), "head": (6, -12, 0), "hips": (4, 14, 0),
-               "upper_arm.L": (12, 10, 4), "thigh.L": (-28, 0, 0), "shin.L": (26, 0, 0),
-               "thigh.R": (18, 0, 0), "shin.R": (14, 0, 0), "jaw": (18, 0, 0)}
-        follow = dict(hit, chest=(18, 42, 6), **{"upper_arm.R": (-60, -55, 4), "hand.R": (62, 0, 14)})
-        hit_loc = {"hips": (0, -0.06, -0.025)}
+        for k0, k1 in zip(keys[:-1], keys[1:]):
+            if k0[0] <= t <= k1[0]:
+                break
+        u = ease((t - k0[0]) / max(k1[0] - k0[0], 1e-9))
+    w = lerp3(k0[1], k1[1], u)
+    if bulge is not None and k0 is not k1:
+        arc = math.sin(math.pi * u)
+        w = tuple(x + bx * arc for x, bx in zip(w, bulge))
+    bl = lerp3(k0[2], k1[2], u)
+    po = lerp3(k0[3], k1[3], u)
+    return w, bl, po
+
+
+def _attack_swing(c, overhead=False):
+    """Weapon swing driven by IK targets for the right arm (clean, readable arcs)."""
+    if overhead:
+        ready = ((-0.05, -0.22, -0.26), (-0.05, -0.45, 0.9), (-0.7, 0.4, -0.5))
+        wind = ((-0.1, 0.02, 0.22), (-0.15, 0.4, 0.9), (-0.9, 0.2, -0.1))
+        hit = ((-0.02, -0.37, -0.18), (0.05, -0.75, -0.55), (-0.7, 0.3, -0.6))
+        follow = ((0.0, -0.32, -0.26), (0.1, -0.6, -0.7), (-0.7, 0.3, -0.6))
+        body = {"wind": {"chest": (-14, -8, 0), "head": (-6, 0, 0), "hips": (0, -6, 0)},
+                "hit": {"chest": (24, 6, 0), "head": (8, 0, 0), "hips": (6, 6, 0)}}
+    else:
+        ready = ((-0.06, -0.24, -0.28), (-0.1, -0.45, 0.9), (-0.6, 0.4, -0.4))
+        wind = ((-0.37, 0.05, 0.17), (-0.35, 0.4, 0.85), (-0.85, 0.25, -0.35))
+        hit = ((-0.02, -0.42, -0.12), (0.25, -0.88, -0.38), (-0.8, 0.2, -0.4))
+        follow = ((-0.1, -0.4, -0.12), (0.3, -0.8, -0.45), (-0.8, 0.2, -0.4))
+        body = {"wind": {"chest": (-8, -16, -4), "head": (-6, 10, 0), "hips": (0, -10, 0)},
+                "hit": {"chest": (16, 14, 4), "head": (6, -8, 0), "hips": (4, 10, 0)}}
+    legs_hit = {"thigh.L": (-22, 0, 0), "shin.L": (22, 0, 0), "thigh.R": (14, 0, 0), "shin.R": (12, 0, 0),
+                "jaw": (18, 0, 0), "upper_arm.L": (10, 0, 0)}
     kf = [
         (0.0, {}, {}),
-        (0.30, wind, {"hips": (0, 0.015, -0.01)}),
-        (0.36, wind, {"hips": (0, 0.015, -0.012)}),     # hold - readable anticipation
-        (0.45, hit, hit_loc),                             # fast strike (3 frames)
-        (0.56, follow, hit_loc),                          # follow-through
+        (0.30, body["wind"], {"hips": (0, 0.015, -0.01)}),
+        (0.36, body["wind"], {"hips": (0, 0.015, -0.012)}),
+        (0.45, dict(body["hit"], **legs_hit), {"hips": (0, -0.05, -0.025)}),
+        (0.56, dict(body["hit"], **legs_hit), {"hips": (0, -0.05, -0.025)}),
         (1.0, {}, {}),
     ]
+    track = [(0.0, *ready), (0.30, *wind), (0.36, *wind), (0.45, *hit), (0.56, *follow), (1.0, *ready)]
 
     def fn(t):
         p = stance(c)
         key_poses(p, t, kf)
+        if t < 0.30:
+            bul = (-0.22, -0.06, 0.0)          # rise out to the side, clear of the pauldron
+        elif 0.36 <= t <= 0.45:
+            bul = (-0.14, -0.1, 0.0)           # strike arcs outward, away from the face
+        elif t > 0.56:
+            bul = (-0.12, -0.04, 0.0)          # recover outside the belt line
+        else:
+            bul = None
+        w, bl, po = ik_track(t, track, bulge=bul)
+        arm_ik(p, c, "R", w, po, bl)
+        blend_fk_ik(p, "R", smooth(seg(t, 0.0, 0.18)) * (1 - smooth(seg(t, 0.8, 1.0))))
         b = math.sin(math.pi * seg(t, 0.4, 0.75))
-        secondary(p, c, t, 1, 0.8 + 1.4 * b)
+        secondary(p, c, t, 1, 0.8 + 0.6 * b)
         p.rot("cape", 14 * b).rot("cape_tip", 18 * b)
         return p
     return ("Attack", 30, False, fn)
 
 
 def _attack_thrust(c):
+    """Two-handed polearm jab via IK: rear hand on the butt, front hand on the shaft."""
+    ready = ((-0.2, -0.12, -0.32), (0.0, -0.95, 0.3))
+    pull = ((-0.24, 0.06, -0.3), (0.0, -0.97, 0.22))
+    jab = ((-0.16, -0.36, -0.22), (0.0, -0.99, 0.1))
+
     def fn(t):
         p = stance(c)
-        pull = smooth(seg(t, 0.0, 0.32))
-        jab = ease_out(seg(t, 0.34, 0.46))
-        rec = smooth(seg(t, 0.6, 1.0))
-        a = pull * (1 - jab)
-        b = jab * (1 - rec)
-        p.rot("upper_arm.R", 20 * a - 35 * b, 0, 0).rot("forearm.R", -25 * a + 30 * b)
-        p.rot("upper_arm.L", 15 * a - 35 * b).rot("forearm.L", -10 * a + 25 * b)
-        p.rot("chest", -6 * a + 14 * b, 12 * a - 10 * b)
-        p.rot("head", -4 * a + 4 * b)
+        a = smooth(seg(t, 0.0, 0.32))
+        j = ease_out(seg(t, 0.34, 0.46))
+        r = smooth(seg(t, 0.6, 1.0))
+        if t < 0.34:
+            w, bl = lerp3(ready[0], pull[0], a), lerp3(ready[1], pull[1], a)
+        elif t < 0.6:
+            w, bl = lerp3(pull[0], jab[0], j), lerp3(pull[1], jab[1], j)
+        else:
+            w, bl = lerp3(jab[0], ready[0], r), lerp3(jab[1], ready[1], r)
+        arm_ik(p, c, "R", w, (-0.8, 0.3, -0.5), bl)
+        k = smooth(seg(t, 0.0, 0.15)) * (1 - smooth(seg(t, 0.85, 1.0)))
+        blend_fk_ik(p, "R", k)
+        if not c.shield:
+            # front hand grips the shaft ~0.26 m ahead of the rear hand (mirror shoulder frame)
+            j_ = c.b.joints()
+            off = np.array(j_["shoulder.R"]) - np.array(j_["shoulder.L"])
+            front = np.array(w) + np.array(bl) / np.linalg.norm(bl) * 0.26 + off
+            arm_ik(p, c, "L", tuple(front), (0.8, 0.3, -0.5), None)
+            blend_fk_ik(p, "L", k)
+        b_ = j * (1 - r)
+        p.rot("chest", -6 * a * (1 - j) + 12 * b_, 10 * a * (1 - j) - 8 * b_)
         st = math.sin(math.pi * seg(t, 0.28, 0.9))
-        p.rot("thigh.L", -30 * st).rot("shin.L", 28 * st).rot("foot.L", 2 * st)
-        p.rot("thigh.R", 18 * st).rot("shin.R", 8 * st)
-        p.move("hips", y=-0.05 * st, z=-0.018 * st)
-        secondary(p, c, t, 1, 0.8 + b)
+        p.rot("thigh.L", -22 * st).rot("shin.L", 20 * st).rot("thigh.R", 14 * st).rot("shin.R", 8 * st)
+        p.move("hips", y=-0.04 * st, z=-0.015 * st)
+        secondary(p, c, t, 1, 0.8 + 0.5 * b_)
         if 0.34 < t < 0.6:
             p.rot("jaw", 14 * math.sin(math.pi * seg(t, 0.34, 0.6)))
         return p
@@ -485,40 +606,55 @@ def _attack_staff(c):
 
 
 def cast(c):
+    """Hero cast: weapon raised to the side, then thrust forward (IK, clear of the head)."""
     def fn(t):
         p = stance(c)
         up = smooth(seg(t, 0.0, 0.3)) * (1 - smooth(seg(t, 0.75, 1.0)))
         point = ease_out(seg(t, 0.45, 0.6)) * (1 - smooth(seg(t, 0.75, 1.0)))
-        p.rot("upper_arm.R", -20 * up - 60 * point, 0, -120 * up + 110 * point)
-        p.rot("forearm.R", 0, 0, -30 * up + 30 * point).rot("hand.R", 40 * up)
-        p.rot("forearm.R", -20 * up)
-        p.rot("upper_arm.L", -60 * up - 30 * point, 20 * up, 25 * up)
-        p.rot("forearm.L", -10 * up)
-        p.rot("chest", -12 * up + 16 * point).rot("head", -14 * up + 10 * point)
+        raise_ = ((-0.36, -0.08, 0.12), (-0.2, -0.2, 1.0), (-0.8, 0.3, -0.3))
+        thrust = ((-0.12, -0.42, -0.02), (0.05, -1.0, 0.1), (-0.8, 0.3, -0.4))
+        w = lerp3(raise_[0], thrust[0], point)
+        bl = lerp3(raise_[1], thrust[1], point)
+        po = lerp3(raise_[2], thrust[2], point)
+        arm_ik(p, c, "R", w, po, bl)
+        blend_fk_ik(p, "R", up)
+        if not c.shield:
+            arm_ik(p, c, "L", (0.3, -0.25, -0.05), (0.8, 0.3, -0.4), (0.2, -0.6, 0.6))
+            blend_fk_ik(p, "L", up * 0.8)
+        p.rot("chest", -10 * up + 14 * point).rot("head", -8 * up + 8 * point)
         p.move("hips", z=0.02 * up * (1 - point))
-        secondary(p, c, t, 1, 1.2)
-        p.rot("cape", 18 * up).rot("cape_tip", 20 * up)
+        secondary(p, c, t, 1, 1.0)
+        p.rot("cape", 10 * up).rot("cape_tip", 12 * up)
         return p
     return ("Cast", 40, False, fn)
 
 
 def work(c):
-    """Gathering loop: chop / mine / dig in front of the unit."""
+    """Gathering loop: chop / mine / dig in front (IK keeps the tool clear of head and ears)."""
+    up_t = ((-0.3, -0.05, 0.1), (-0.2, 0.2, 1.0), (-0.85, 0.2, -0.2))
+    down_t = ((-0.08, -0.4, -0.3), (0.0, -0.6, -0.8), (-0.8, 0.2, -0.5))
+
     def fn(t):
         p = stance(c)
         lift = smooth(seg(t, 0.0, 0.45))
         hit = ease_in(seg(t, 0.45, 0.58))
-        a = lift * (1 - hit)
-        p.rot("upper_arm.R", -50 + 30 * a - 20 * hit, -10, -10 - 85 * a)
-        p.rot("hand.R", 40 * a)
-        p.rot("forearm.R", -20 - 30 * a + 40 * hit * (1 - smooth(seg(t, 0.6, 1.0))))
-        p.rot("upper_arm.L", -50 - 70 * a + 20 * hit, -30, 10).rot("forearm.L", -40 - 20 * a)
-        p.rot("chest", -8 * a + 20 * hit * (1 - smooth(seg(t, 0.6, 1.0))))
-        crouch(p, c, 10 + 8 * hit * (1 - smooth(seg(t, 0.6, 1.0))))
-        p.rot("head", 12 - 10 * a)
+        back = smooth(seg(t, 0.62, 1.0))
+        u = lift * (1 - hit)
+        u = u if t < 0.62 else back * 0.0
+        k = (1 - hit) * lift if t < 0.6 else 0.0
+        w = lerp3(down_t[0], up_t[0], k)
+        bl = lerp3(down_t[1], up_t[1], k)
+        po = lerp3(down_t[2], up_t[2], k)
+        bul = (-0.15, -0.05, 0) if t < 0.45 else None
+        if bul:
+            w = tuple(x + bx * math.sin(math.pi * lift) for x, bx in zip(w, bul))
+        arm_ik(p, c, "R", w, po, bl)
+        arm_ik(p, c, "L", (0.18, -0.36, -0.2 + 0.25 * k), (0.8, 0.3, -0.4), None)
+        p.rot("chest", -6 * k + 16 * hit * (1 - back)).rot("head", 10 - 6 * k)
+        crouch(p, c, 10 + 8 * hit * (1 - back))
         secondary(p, c, t, 1, 0.8)
         jolt = math.sin(math.pi * seg(t, 0.56, 0.7))
-        p.rot("ear.L", 12 * jolt).rot("ear.R", 12 * jolt)
+        p.rot("ear.L", 10 * jolt).rot("ear.R", 10 * jolt)
         return p
     return ("Work", 30, True, fn)
 
@@ -529,7 +665,7 @@ def hit(c):
         k = ease_out(seg(t, 0.0, 0.25)) * (1 - smooth(seg(t, 0.3, 1.0)))
         p.rot("chest", -16 * k, 0, 6 * k).rot("head", -14 * k, 0, -6 * k)
         p.move("hips", y=0.03 * k)
-        p.rot("upper_arm.L", -10 * k, 0, 20 * k).rot("upper_arm.R", -10 * k, 0, -20 * k)
+        p.rot("upper_arm.L", -6 * k, 0, 9 * k).rot("upper_arm.R", -6 * k, 0, -9 * k)
         eyes_closed(p, 0.8 * k)
         for s in ("L", "R"):
             p.rot(f"ear.{s}", 25 * k)
@@ -540,7 +676,7 @@ def hit(c):
 
 def death(c):
     def fn(t):
-        p = stance(c, k=1 - smooth(seg(t, 0.0, 0.4)))
+        p = stance(c, k=1 - smooth(seg(t, 0.0, 0.2)))
         stag = math.sin(math.pi * seg(t, 0.0, 0.3))
         fall = ease_in(seg(t, 0.25, 0.62))
         settle = math.sin(math.pi * seg(t, 0.62, 0.78))
@@ -548,14 +684,18 @@ def death(c):
         p.rot("hips", -84 * fall - 5 * settle)
         lie = c.b.torso_d * 0.5 + 0.02
         p.move("hips", y=0.06 * stag + (c.b.hip_h * 0.9) * fall, z=-(c.b.hip_h - lie) * fall + 0.02 * settle)
-        p.rot("thigh.L", -70 * fall).rot("thigh.R", -55 * fall).rot("shin.L", 30 * fall).rot("shin.R", 50 * fall)
-        p.rot("upper_arm.L", -40 * fall, 0, 55 * fall).rot("upper_arm.R", -50 * fall, 0, -60 * fall)
-        p.rot("forearm.L", -20 * fall).rot("forearm.R", -30 * fall)
+        # fall back, arms flung wide, legs straight and apart (nothing folds into armour)
+        wide = smooth(seg(t, 0.0, 0.3))          # arms swing out at once, clear of belt and skirt
+        legs = max(fall, 0.5 * stag)
+        p.rot("thigh.L", -24 * fall, 0, 16 * legs).rot("thigh.R", -18 * fall, 0, -16 * legs)
+        p.rot("shin.L", 3 * fall).rot("shin.R", 5 * fall)
+        p.rot("upper_arm.L", -14 * wide, 0, 38 * wide).rot("upper_arm.R", -14 * wide, 0, -40 * wide)
+        p.rot("forearm.L", -6 * wide).rot("forearm.R", -8 * wide)
         for i, tb in enumerate(c.tail):
-            p.rot(tb, -20 * fall, 15 * fall * (1 if i % 2 else -1))
+            p.rot(tb, -10 * fall, 10 * fall * (1 if i % 2 else -1))
         for s in ("L", "R"):
             p.rot(f"ear.{s}", 25 * fall, 0, 0)
-        p.rot("cape", -40 * fall)
+        p.rot("cape", -12 * fall)
         eyes_closed(p, smooth(seg(t, 0.5, 0.6)))
         p.rot("jaw", 12 * smooth(seg(t, 0.55, 0.7)))
         return p
@@ -563,28 +703,49 @@ def death(c):
 
 
 def victory(c):
+    """Weapon thrust to the sky at shoulder height (IK keeps arms clear of the collar)."""
     def fn(t):
         p = stance(c)
         up = smooth(seg(t, 0.0, 0.2)) * (1 - smooth(seg(t, 0.85, 1.0)))
         jump = math.sin(math.pi * seg(t, 0.15, 0.45)) + 0.6 * math.sin(math.pi * seg(t, 0.5, 0.75))
-        p.rot("upper_arm.R", -20 * up, 0, -125 * up).rot("forearm.R", 0, 0, -30 * up).rot("hand.R", 50 * up)
+        shake = 0.03 * math.sin(TAU * 3 * t) * up
+        arm_ik(p, c, "R", (-0.32, -0.14, 0.08 + shake), (-0.8, 0.3, -0.3), (-0.25, -0.15, 1.0))
+        blend_fk_ik(p, "R", up)
         if not c.shield:
-            p.rot("upper_arm.L", -20 * up, 0, 125 * up).rot("forearm.L", 0, 0, 30 * up)
+            arm_ik(p, c, "L", (0.3, -0.16, 0.04 - shake), (0.8, 0.3, -0.3), (0.2, -0.3, 1.0))
+            blend_fk_ik(p, "L", up)
         p.move("hips", z=0.07 * jump)
         p.rot("thigh.L", -15 * jump).rot("thigh.R", -15 * jump).rot("shin.L", 25 * jump).rot("shin.R", 25 * jump)
-        p.rot("chest", -10 * up).rot("head", -16 * up)
+        p.rot("chest", -8 * up).rot("head", -7 * up)
         p.rot("jaw", 18 * up)
-        secondary(p, c, t, 2, 1.5)
+        secondary(p, c, t, 2, 1.2)
         for i, tb in enumerate(c.tail):
-            p.rot(tb, 20 * up, 25 * up * math.sin(TAU * 4 * t - i))
+            p.rot(tb, -4 * up, 14 * up * math.sin(TAU * 4 * t - i))
         return p
     return ("Victory", 48, True, fn)
 
 
+def cloth_follow(p):
+    """Tabard rides over whichever thigh is forward (no leg poking through)."""
+    lead = min(p.get("thigh.L", (0, 0, 0))[0], p.get("thigh.R", (0, 0, 0))[0], 0.0)
+    hips = p.get("hips", (0, 0, 0))[0]
+    p.rot("tabard", lead * 1.05 - hips * 0.2)
+    p.rot("tabard_tip", lead * 0.25)
+    back = max(p.get("thigh.L", (0, 0, 0))[0], p.get("thigh.R", (0, 0, 0))[0], 0.0)
+    p.rot("cape", back * 0.8).rot("cape_tip", back * 0.3)
+    return p
+
+
+def _wrap(clip):
+    name, frames, loop, fn = clip
+    return (name, frames, loop, lambda t: cloth_follow(fn(t)))
+
+
 def clips_for(c, worker=False, hero=False):
     out = [idle(c), idle_special(c), walk(c), attack(c), hit(c), death(c), victory(c)]
+    out = [_wrap(cl) for cl in out]
     if worker:
-        out.append(work(c))
+        out.append(_wrap(work(c)))
     if hero:
-        out.append(cast(c))
+        out.append(_wrap(cast(c)))
     return out

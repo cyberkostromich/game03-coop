@@ -6,10 +6,10 @@ import os
 import bpy
 import numpy as np
 
-from . import anim, beast, build, clips, palette, render, rig, units
+from . import anim, beast, build, clips, palette, render, rig, texture, units
 
 
-def assemble(uid, team=None):
+def assemble(uid, team=None, textured=True):
     """Build a unit into the current scene. Returns (spec, mesh_ob, arm_ob)."""
     spec = units.build(uid)
     s = spec.body.scale
@@ -18,7 +18,12 @@ def assemble(uid, team=None):
     for p in parts:
         p.V = p.V * s
     ob = build.parts_to_object(parts, uid, team=tint)
-    build.bake_ao(ob, strength=0.7, distance=0.22 * s, samples=32)
+    budget = 16000 if spec.hero else (9000 if spec.worker else 12500)
+    build.decimate_to(ob, budget)
+    build.bake_ao(ob, strength=0.55, distance=0.22 * s, samples=32)
+    if textured:
+        size = 2048 if spec.hero else 1024
+        texture.bake_textures(ob, size=size, scale=s, team=palette.rgb(tint).tolist())
     bones = []
     for bspec in beast.skeleton(spec.body):
         name, head, tail, parent = bspec[:4]
@@ -54,7 +59,7 @@ def walk_speed(spec, clip_info):
 
 def export_glb(path, ob, arm, team_rgb):
     build.strip_team_tint()
-    for o in bpy.context.view_layer.objects:
+    for o in bpy.context.scene.objects:
         o.select_set(False)
     ob.select_set(True)
     arm.select_set(True)
@@ -65,10 +70,11 @@ def export_glb(path, ob, arm, team_rgb):
         export_force_sampling=True, export_frame_step=1, export_optimize_animation_size=True,
         export_def_bones=True, export_skins=True, export_morph=False, export_lights=False,
         export_cameras=False, export_materials="EXPORT", export_vertex_color="MATERIAL",
-        export_all_vertex_colors=False, export_extras=False,
+        export_all_vertex_colors=False, export_extras=False, export_image_format="WEBP",
+        export_image_quality=88,
     )
     from . import glb
-    glb.patch_materials(path, {"team": team_rgb})
+    glb.patch_materials(path, {"team": team_rgb, "roof": team_rgb})
 
 
 def build_unit(uid, out_dir, preview_dir=None):
@@ -105,20 +111,23 @@ def pose_at(arm, clip, frame):
 
 
 def preview(spec, ob, arm, path, shots=None):
-    """Contact sheet: one row of poses rendered from the RTS-ish angle."""
-    shots = shots or [("Idle", 1), ("Walk", 6), ("Attack", 14), ("IdleSpecial", 50)]
+    """Review sheet: idle + attack beauty shots (Reforged framing) and an RTS-camera view."""
+    shots = shots or [("Idle", 1, "beauty"), ("Attack", 14, "beauty"), ("Walk", 6, "rts")]
     if spec.worker:
-        shots[-1] = ("Work", 14)
-    s = spec.body.scale
+        shots[1] = ("Work", 14, "beauty")
     h = max(v.co.z for v in ob.data.vertices)
-    render.setup_render((600, 720), 24)
-    render.setup_world()
-    render.lights()
-    render.ground()
-    cam = render.camera((0, 0, h * 0.5), h * 2.3, 22, 28, lens=50)
+    render.setup_render((600, 720), 32)
+    render.setup_world(0.9, top="#3a68c0", bottom="#16264a")
+    render.lights(sun_rot=(48, 0, 28), sun_strength=3.8)
+    render.ground("#16264a")
+    cam = render.camera((0, 0, h * 0.5), h * 2.3, 10, 22, lens=50)
     frames = []
     base, ext = os.path.splitext(path)
-    for i, (clip, f) in enumerate(shots):
+    for i, (clip, f, kind) in enumerate(shots):
+        if kind == "rts":
+            render.aim(cam, (0, 0, h * 0.4), max(h, 1.2) * 3.6, 52, 30)
+        else:
+            render.aim(cam, (0, 0, h * 0.5), h * 2.3, 10, 22)
         pose_at(arm, clip, f)
         fp = f"{base}_{i}{ext}"
         render.render(fp)
@@ -146,3 +155,74 @@ def _stitch(files, out):
     for im in imgs:
         bpy.data.images.remove(im)
     bpy.data.images.remove(sheet)
+
+
+# ---------------------------------------------------------------------------
+# Buildings
+# ---------------------------------------------------------------------------
+
+def assemble_building(bid, textured=True, tex_size=2048):
+    from . import buildings
+    spec = buildings.build(bid)
+    tint = spec.team
+    ob = build.parts_to_object(spec.parts, bid, team=tint)
+    build.decimate_to(ob, 60000)   # buildings: few on screen, keep thin details intact
+    build.bake_ao(ob, strength=0.6, distance=0.9, samples=32)
+    if textured:
+        texture.bake_textures(ob, size=tex_size, scale=2.4, team=palette.rgb(tint).tolist())
+    bones = [("root", (0, 0, 0), (0, 0, 0.5), None, True)] + [
+        (n, np.asarray(h), np.asarray(t), par, True) for n, h, t, par in spec.bones]
+    arm = rig.create_armature(bid, bones)
+    rig.bind(ob, arm)
+    return spec, ob, arm
+
+
+def building_clips(spec, arm):
+    names = [b.name for b in arm.data.bones]
+    banners = sorted({n.split(".")[0] for n in names if n.startswith("banner")})
+
+    def idle(t):
+        p = anim.Pose()
+        for i, bn in enumerate(banners):
+            ph = i * 0.37
+            p.rot(bn + ".1", 4 * math.sin(2 * math.pi * (t * 2 + ph)), 6 * math.sin(2 * math.pi * (t + ph)), 0)
+            p.rot(bn + ".2", 8 * math.sin(2 * math.pi * (t * 2 + ph - 0.2)), 10 * math.sin(2 * math.pi * (t + ph - 0.25)), 0)
+        if "wheel" in names:
+            p.rot("wheel", -360 * t)
+        return p
+    anim.bake_clip(arm, "Idle", 90, idle, loop=True)
+    return {"Idle": {"frames": 90, "seconds": 3.0, "loop": True}}
+
+
+def preview_building(ob, arm, path):
+    render.setup_render((900, 700), 32)
+    render.setup_world(0.9, top="#9cc4ef", bottom="#e8dcc0")
+    render.lights(sun_rot=(50, 0, 35), sun_strength=3.8)
+    render.ground("#6f9a4a")
+    h = max(v.co.z for v in ob.data.vertices)
+    cam = render.camera((0, 0, h * 0.4), h * 2.3, 28, 30, lens=50)
+    base, ext = os.path.splitext(path)
+    f1 = f"{base}_0{ext}"
+    render.render(f1)
+    render.aim(cam, (0, 0, h * 0.25), h * 3.2, 55, 25)
+    f2 = f"{base}_1{ext}"
+    render.render(f2)
+    _stitch([f1, f2], path)
+    os.remove(f1)
+    os.remove(f2)
+
+
+def build_building(bid, out_dir, preview_dir=None):
+    build.reset_scene()
+    spec, ob, arm = assemble_building(bid)
+    info = building_clips(spec, arm)
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{bid}.glb")
+    tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+    meta = {"id": bid, "faction": spec.faction, "name": spec.name, "role": spec.role,
+            "footprint": spec.footprint, "tris": tris, "clips": info, "team_default": spec.team,
+            "height": round(float(max(v.co.z for v in ob.data.vertices)), 3), "file": f"{bid}.glb"}
+    if preview_dir:
+        preview_building(ob, arm, os.path.join(preview_dir, f"{bid}.png"))
+    export_glb(path, ob, arm, palette.rgb(spec.team).tolist())
+    return meta

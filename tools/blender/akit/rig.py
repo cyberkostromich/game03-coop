@@ -15,7 +15,7 @@ def create_armature(name, bones, collection=None):
     ob = bpy.data.objects.new(name + "_rig", arm)
     (collection or bpy.context.scene.collection).objects.link(ob)
     bpy.context.view_layer.objects.active = ob
-    for o in bpy.context.view_layer.objects:
+    for o in bpy.context.scene.objects:
         o.select_set(False)
     ob.select_set(True)
     bpy.ops.object.mode_set(mode="EDIT")
