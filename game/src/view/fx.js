@@ -186,6 +186,25 @@ export class Fx {
     this.markers.push({ m, t: 0, ttl, r0: r * 0.3, r1: r, follow });
   }
 
+  // glowing slash ribbon: a partial torus that sweeps and fades
+  slash(x, y, z, yaw, col, r = 0.9, tilt = 0.5) {
+    const g = new THREE.TorusGeometry(r, 0.05, 4, 24, Math.PI * 0.9);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(...col), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    m.position.set(x, z, -y);
+    m.rotation.set(Math.PI / 2 + tilt, 0, yaw);
+    this.scene.add(m);
+    this.markers.push({ m, t: 0, ttl: 0.35, r0: 0.6, r1: 1.15, sweep: true });
+  }
+
+  // expanding standing ring (barks, howls, landings)
+  shock(x, y, col, r, ttl = 0.6) {
+    const g = new THREE.CylinderGeometry(1, 1, 0.8, 40, 1, true);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: new THREE.Color(...col), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    m.position.set(x, this.h(x, y) + 0.4, -y);
+    this.scene.add(m);
+    this.markers.push({ m, t: 0, ttl, r0: 0.3, r1: r, wall: true });
+  }
+
   marker(x, y, col) { this.ring(x, y, col, 1.4, 0.5); this.parts.burst(x, this.h(x, y) + 0.1, -y, 8, { color: col, speed: 1.5, ttl: 0.4, size: 0.15, gravity: 0 }); }
 
   cast(ev) {
@@ -195,9 +214,19 @@ export class Fx {
     const hz = this.h(e.x, e.y);
     this.parts.burst(e.x, hz + 1, -e.y, 24, { color: col, speed: 2.5, ttl: 0.6, size: 0.3, gravity: -1 });
     if (ev.r) this.ring(ev.x, ev.y, col, ev.r * 2, 0.7);
-    if (ev.vfx === 'claw' || ev.vfx === 'q') this.parts.burst(ev.x, this.h(ev.x, ev.y) + 1, -ev.y, 18, { color: [1, 0.3, 0.2], speed: 4, ttl: 0.4, size: 0.2 });
-    if (ev.vfx === 'night') { this.app.flash([0.1, 0.05, 0.25], 0.9); }
-    if (ev.vfx === 'howl' || ev.vfx === 'bark') this.app.cam.shake(0.4);
+    const hz2 = this.h(ev.x, ev.y);
+    if (ev.vfx === 'claw' || ev.vfx === 'q') {
+      this.parts.burst(ev.x, hz2 + 1, -ev.y, 18, { color: [1, 0.3, 0.2], speed: 4, ttl: 0.4, size: 0.2 });
+      const yaw = Math.atan2(ev.y - e.y, ev.x - e.x);
+      for (let k = 0; k < 3; k++) this.slash(ev.x, ev.y, hz2 + 0.8 + k * 0.18, yaw + 0.3 * (k - 1), [1, 0.35 + k * 0.15, 0.2], 0.8, 0.6 - k * 0.2);
+    }
+    if (ev.vfx === 'night') {
+      this.app.flash([0.12, 0.05, 0.3], 0.75);
+      this.shock(e.x, e.y, [0.5, 0.3, 1], 14, 1.2);
+    }
+    if (ev.vfx === 'howl' || ev.vfx === 'bark') { this.app.cam.shake(0.4); this.shock(e.x, e.y, ev.vfx === 'bark' ? [1, 0.85, 0.5] : [0.6, 0.7, 1], ev.vfx === 'bark' ? 5 : 10); }
+    if (ev.vfx === 'exodus' || ev.vfx === 'leap') this.shock(e.x, e.y, [0.9, 0.95, 1], 3, 0.5);
+    if (ev.vfx === 'r' || ev.vfx === 'e' || ev.vfx === 'w') this.shock(e.x, e.y, col, 2.5, 0.5);
     if (ev.vfx === 'coins') this.parts.burst(e.x, hz + 1.6, -e.y, 30, { color: [1, 0.85, 0.2], speed: 3, lift: 3, ttl: 1, size: 0.18, gravity: 9 });
   }
 
@@ -240,7 +269,7 @@ export class Fx {
       case 'vanish': this.parts.burst(x, h + 0.6, -y, 14, { color: [0.7, 0.7, 0.9], speed: 1, lift: 1, ttl: 0.7, size: 0.4, gravity: 0, alpha: 0.5 }); break;
       case 'heal': this.parts.burst(x, h + 0.8, -y, 6, { color: [0.4, 1, 0.4], speed: 0.6, lift: 1.5, ttl: 0.8, size: 0.22, gravity: 0 }); break;
       case 'revive': this.ring(x, y, [1, 0.9, 0.5], 3, 1.4); this.parts.burst(x, h + 0.5, -y, 50, { color: [1, 0.9, 0.5], speed: 1, lift: 4, ttl: 1.3, size: 0.3, gravity: 0 }); break;
-      case 'slam': this.app.cam.shake(0.35); this.ring(x, y, [1, 0.9, 0.7], (ev.r || 2) * 2, 0.6); this.parts.burst(x, h + 0.1, -y, 26, { color: [0.7, 0.6, 0.45], speed: 4, ttl: 0.8, size: 0.6, gravity: 2, alpha: 0.45, grow: 1 }); break;
+      case 'slam': this.app.cam.shake(0.35); this.shock(x, y, [1, 0.9, 0.7], (ev.r || 2) * 1.1, 0.5); this.ring(x, y, [1, 0.9, 0.7], (ev.r || 2) * 2, 0.6); this.parts.burst(x, h + 0.1, -y, 26, { color: [0.7, 0.6, 0.45], speed: 4, ttl: 0.8, size: 0.6, gravity: 2, alpha: 0.45, grow: 1 }); break;
       case 'parry': this.parts.burst(x, h + 1, -y, 10, { color: [1, 1, 0.8], speed: 5, ttl: 0.25, size: 0.15 }); break;
     }
   }
@@ -292,9 +321,11 @@ export class Fx {
       const k = m.t / m.ttl;
       if (m.follow) { const e = w.byId.get(m.follow); if (e) m.m.position.set(e.x, this.h(e.x, e.y) + 0.08, -e.y); }
       const r = m.r0 + (m.r1 - m.r0) * Math.min(1, k * 1.5);
-      m.m.scale.set(r, 1, r);
+      if (m.sweep) m.m.scale.setScalar(r);
+      else if (m.wall) m.m.scale.set(r, 1 - k * 0.7, r);
+      else m.m.scale.set(r, 1, r);
       m.m.material.opacity = 1 - k;
-      if (k >= 1) { this.scene.remove(m.m); m.m.material.dispose(); return false; }
+      if (k >= 1) { this.scene.remove(m.m); m.m.material.dispose(); if (m.sweep || m.wall) m.m.geometry.dispose(); return false; }
       return true;
     });
     for (const s of this.shoals) {

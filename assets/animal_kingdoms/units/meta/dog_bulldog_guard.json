@@ -4,9 +4,9 @@
  "name": "Бульдог-гвардеец",
  "role": "elite",
  "species": "dog",
- "scale": 1.06,
- "tris": 11462,
- "bones": 28,
+ "scale": 1.08,
+ "tris": 12499,
+ "bones": 30,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.458,
- "height": 1.112,
+ "walk_speed": 1.145,
+ "height": 1.531,
  "team_default": "#2f6b3a",
  "file": "dog_bulldog_guard.glb"
 }

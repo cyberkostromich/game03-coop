@@ -1,0 +1,21 @@
+{
+ "id": "ham_farm",
+ "faction": "hamsters",
+ "name": "Семечковое поле",
+ "role": "farm",
+ "footprint": [
+  3.5,
+  3.0
+ ],
+ "tris": 14298,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#c0592f",
+ "height": 1.587,
+ "file": "ham_farm.glb"
+}

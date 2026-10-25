@@ -4,9 +4,9 @@
  "name": "Хомяк-носильщик",
  "role": "worker",
  "species": "hamster",
- "scale": 0.95,
- "tris": 9108,
- "bones": 27,
+ "scale": 0.92,
+ "tris": 9000,
+ "bones": 29,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -49,8 +49,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.234,
- "height": 0.719,
+ "walk_speed": 0.549,
+ "height": 0.926,
  "team_default": "#c0592f",
  "file": "ham_worker.glb"
 }

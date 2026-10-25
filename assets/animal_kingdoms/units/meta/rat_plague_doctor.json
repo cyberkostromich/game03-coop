@@ -5,8 +5,8 @@
  "role": "support",
  "species": "rat",
  "scale": 1.0,
- "tris": 8168,
- "bones": 29,
+ "tris": 11516,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -24,8 +24,8 @@
    "loop": true
   },
   "Attack": {
-   "frames": 34,
-   "seconds": 1.133,
+   "frames": 30,
+   "seconds": 1.0,
    "loop": false
   },
   "Hit": {
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.474,
- "height": 0.967,
+ "walk_speed": 1.123,
+ "height": 1.303,
  "team_default": "#6f8a2a",
  "file": "rat_plague_doctor.glb"
 }

@@ -1,0 +1,21 @@
+{
+ "id": "hare_barracks",
+ "faction": "hares",
+ "name": "Дружинная изба",
+ "role": "barracks",
+ "footprint": [
+  4.0,
+  3.5
+ ],
+ "tris": 8718,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#a3243b",
+ "height": 4.59,
+ "file": "hare_barracks.glb"
+}

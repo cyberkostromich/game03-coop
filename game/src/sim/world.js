@@ -816,6 +816,8 @@ export class World {
     const ai = D.armor.indexOf(t.kind === 'building' ? (t.def.armorType || 'fortified') : t.def.armorType);
     let mult = (D.attack[atk] || D.attack.hero)[ai < 0 ? 1 : ai];
     if (opts.vsBuildings && t.kind === 'building') mult *= opts.vsBuildings;
+    // workers shovel earth into rat pits; hamsters dig best (GDD: pits can be filled)
+    if (t.type === 'rat_pit' && src?.def?.gatherer) mult *= src.def.faction === 'hamsters' ? 8 : 4;
     const armor = (t.armor || 0) + (m.armor || 0);
     let dmg = amt * mult * armorFactor(armor, D.armor_reduction_per_point) * (m.dmgTaken || 1);
     if (m.redirect) {                              // Rex's Loyalty: share damage onto the protector

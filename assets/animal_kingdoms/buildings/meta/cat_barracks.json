@@ -1,0 +1,21 @@
+{
+ "id": "cat_barracks",
+ "faction": "cats",
+ "name": "Кошачья казарма",
+ "role": "barracks",
+ "footprint": [
+  4.5,
+  3.5
+ ],
+ "tris": 15570,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2b3f8f",
+ "height": 4.887,
+ "file": "cat_barracks.glb"
+}

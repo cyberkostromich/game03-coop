@@ -1,0 +1,21 @@
+{
+ "id": "ham_tower",
+ "faction": "hamsters",
+ "name": "Нора-бункер",
+ "role": "tower",
+ "footprint": [
+  2.2,
+  2.2
+ ],
+ "tris": 2370,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#c0592f",
+ "height": 3.07,
+ "file": "ham_tower.glb"
+}

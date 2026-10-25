@@ -1,0 +1,21 @@
+{
+ "id": "rat_pit",
+ "faction": "rats",
+ "name": "Провал Крысиной Чумы",
+ "role": "spawner",
+ "footprint": [
+  4.0,
+  4.0
+ ],
+ "tris": 2020,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#6f8a2a",
+ "height": 1.041,
+ "file": "rat_pit.glb"
+}

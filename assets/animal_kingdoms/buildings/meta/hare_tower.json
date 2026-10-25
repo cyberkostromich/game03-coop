@@ -1,0 +1,21 @@
+{
+ "id": "hare_tower",
+ "faction": "hares",
+ "name": "Смотровая кочка",
+ "role": "tower",
+ "footprint": [
+  2.0,
+  2.0
+ ],
+ "tris": 1854,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#a3243b",
+ "height": 5.25,
+ "file": "hare_tower.glb"
+}

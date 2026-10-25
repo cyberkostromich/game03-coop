@@ -376,7 +376,7 @@ def building(bid, faction, name, role, footprint):
 def build(bid):
     fn, faction, name, role, fp = REGISTRY[bid]
     parts, bones = fn()
-    return BuildingSpec(bid, faction, name, role, parts, bones, fp, palette.FACTIONS[faction]["team"])
+    return BuildingSpec(bid, faction, name, role, parts, bones, fp, palette.FACTIONS.get(faction, {"team": "#8a7a5a"})["team"])
 
 
 def medallion_on_wall(faction, pos, r=0.35, gold="#e3a227"):
@@ -467,3 +467,593 @@ def cat_hall():
     out += lantern_post((-1.0, -2.6, 0.0))
     out += lantern_post((1.0, -2.6, 0.0))
     return out, bones
+
+
+# ---------------------------------------------------------------------------
+# More primitives (logs, mounds, round doors, silos, plants)
+# ---------------------------------------------------------------------------
+
+def log_wall(w, d, z0, h, color="#efe9dc", spots="#3a3530", r=0.11, ends=True):
+    """Stacked log cabin walls with crossing log ends (birch for hares)."""
+    out = []
+    n = max(2, int(h / (2 * r * 0.92)))
+    for i in range(n):
+        z = z0 + r + i * 2 * r * 0.92
+        alt = i % 2
+        for axis in (0, 1):
+            L = (w if axis == 0 else d) + (0.5 if ends else 0.0)
+            off = (d if axis == 0 else w) / 2
+            for sgn in (-1, 1):
+                lg = geo.cyl(r, L, 8, color=color, z0=-L / 2).tf(rot=(0, 90, 0) if axis == 0 else (90, 0, 0))
+                if axis == 0:
+                    lg.tf((0, sgn * off, z + (r * 0.92 if alt else 0)))
+                else:
+                    lg.tf((sgn * off, 0, z + (0 if alt else r * 0.92)))
+                lg.paint(geo.stripes(spots, axis=axis ^ 1 if False else (0 if axis == 0 else 1), freq=9.0,
+                                     width=0.08, phase=i * 1.7))
+                out.append(_st(lg, "wood"))
+    return out
+
+
+def mound(r, h, z0=0.0, color="#7da04a", earth="#8a6a48", mat="foliage", segs=20):
+    """Grassy burrow mound: earth sides, grass cap."""
+    prof = [(r * 1.08, z0), (r * 1.02, z0 + h * 0.25), (r * 0.85, z0 + h * 0.6), (r * 0.5, z0 + h * 0.9),
+            (0.0, z0 + h)]
+    m = geo.lathe(prof, segs, color=color)
+    m.paint(geo.grad_z(earth, color, z0, z0 + h * 0.45))
+    m.deform(lambda V: V + np.column_stack([np.zeros(len(V)), np.zeros(len(V)),
+                                            0.04 * np.sin(V[:, 0] * 7) * np.sin(V[:, 1] * 5)]))
+    return [_st(m, mat)]
+
+
+def round_door(r, z_c, y, wood="#6b4a2e", frame="#9a8a70", iron="#3a3a40", frame_mat="stone"):
+    out = []
+    d = geo.disc(r, 0.1, 20, wood, bevel=0.05).tf((0, y, z_c))
+    d.paint(geo.stripes(palette.mul(wood, 0.72), axis=0, freq=2 * math.pi / (r / 2.5), width=0.12))
+    out.append(_st(d, "wood"))
+    ring = np.array([(math.cos(a) * r * 1.08, y - 0.02, z_c + math.sin(a) * r * 1.08)
+                     for a in np.linspace(0, 2 * math.pi, 33)])
+    out.append(_st(geo.tube(ring, 0.07, 6, color=frame), frame_mat))
+    knob = geo.qsphere(0.05, 2, "#e3a227").tf((0, y - 0.07, z_c))
+    out.append(_st(knob, "gold"))
+    return out
+
+
+def silo(x, y, r, h, wall="#d9c7a0", roof=TW, band="#8a5a32"):
+    out = [_st(geo.cyl(r, h, 14, color=wall).tf((x, y, 0)), "plaster")]
+    for z in (h * 0.3, h * 0.65):
+        b = geo.lathe([(r * 1.02, z - 0.04), (r * 1.06, z), (r * 1.02, z + 0.04)], 14, cap_bottom=False,
+                      cap_top=False, color=band).tf((x, y, 0))
+        out.append(_st(b, "wood"))
+    out += [q.tf((x, y, 0)) for q in cone_roof(r, h, r * 1.3, roof, overhang=0.18, sag=0.1, segs=14,
+                                                 finial=None, thick=0.08)]
+    return out
+
+
+def sunflower(pos, h=1.2, s=1.0):
+    pos = np.asarray(pos, float)
+    out = []
+    st = geo.tube([pos, pos + np.array([0.02, 0, h * 0.5]), pos + np.array([0, 0.03, h])], 0.03 * s, 5,
+                  color="#5a8a2e")
+    out.append(_st(st, "foliage"))
+    head = geo.disc(0.13 * s, 0.05, 12, "#5a3a1e").tf(rot=(-30, 0, 0)).tf(pos + np.array([0, -0.03, h]))
+    out.append(_st(head, "foliage"))
+    for a in np.linspace(0, 2 * math.pi, 10, endpoint=False):
+        pt = geo.ellipsoid(0.07 * s, 0.015, 0.03 * s, 2, "#f2c12e").tf(
+            (math.cos(a) * 0.17 * s, 0, math.sin(a) * 0.17 * s), rot=(0, -math.degrees(a), 0))
+        pt.tf(rot=(-30, 0, 0)).tf(pos + np.array([0, -0.025, h]))
+        out.append(_st(pt, "foliage"))
+    lf = geo.ellipsoid(0.12 * s, 0.02, 0.06 * s, 3, "#4f8a2a").tf(rot=(0, 30, 20)).tf(pos + np.array([0.1, 0, h * 0.5]))
+    out.append(_st(lf, "foliage"))
+    return out
+
+
+def carrot_row(x0, x1, y, n=6):
+    out = []
+    bed = geo.rbox(abs(x1 - x0) + 0.3, 0.45, 0.16, r=0.06, k=1, color="#6e4e30").tf(((x0 + x1) / 2, y, 0.08))
+    out.append(_st(bed, "foliage"))
+    for x in np.linspace(x0, x1, n):
+        for k in range(3):
+            lf = geo.cone(0.05, 0.3 + 0.05 * k, 5, "#5aa13a").tf(rot=(15 * (k - 1), 10 * (k - 1), 0)).tf((x, y, 0.15))
+            out.append(_st(lf, "foliage"))
+        top = geo.cone(0.045, 0.05, 6, palette.CARROT).tf((x, y, 0.13), rot=(180, 0, 0))
+        out.append(_st(top, "foliage"))
+    return out
+
+
+def bone_finial(pos, s=1.0, color="#efe6d2"):
+    pos = np.asarray(pos, float)
+    out = [_st(geo.cyl(0.05 * s, 0.4 * s, 8, color=color, z0=0).tf(pos), "plaster")]
+    for z in (0.0, 0.4 * s):
+        for x in (-0.05 * s, 0.05 * s):
+            out.append(_st(geo.qsphere(0.07 * s, 3, color).tf(pos + np.array([x, 0, z])), "plaster"))
+    return out
+
+
+def fence(points, h=0.7, color="#7a5232"):
+    out = []
+    pts = [np.asarray(p, float) for p in points]
+    for a, b in zip(pts[:-1], pts[1:]):
+        L = np.linalg.norm(b - a)
+        n = max(2, int(L / 0.5))
+        for t in np.linspace(0, 1, n):
+            p = a + (b - a) * t
+            out.append(beam(p, p + np.array([0, 0, h]), 0.07, color))
+        for z in (h * 0.4, h * 0.85):
+            out.append(beam(a + np.array([0, 0, z]), b + np.array([0, 0, z]), 0.05, color))
+    return out
+
+
+def rock(pos, s=1.0, color="#8a8478", seed=0):
+    rng = np.random.default_rng(seed)
+    p = geo.qsphere(1.0, 3, color).tf(scale=(0.6 * s, 0.5 * s, 0.4 * s))
+    p.V += rng.normal(0, 0.08 * s, p.V.shape)
+    p.V[:, 2] = np.maximum(p.V[:, 2], -0.05 * s)
+    p.tf(np.asarray(pos, float) + np.array([0, 0, 0.12 * s]))
+    p.smooth = False
+    return [_st(p, "stone")]
+
+
+def kokoshnik_gable(w, h, z0, y, color=TW, trim="#e7b53c"):
+    """Rounded 'kokoshnik' gable over a hare doorway/porch."""
+    pts = [(math.cos(a) * w / 2, math.sin(a) * h) for a in np.linspace(0, math.pi, 13)]
+    g = geo.extrude(pts, 0.1, color, bevel=0.06).tf((0, y, z0))
+    out = [_st(g, "roof")]
+    edge = np.array([(math.cos(a) * w / 2 * 1.02, y - 0.06, z0 + math.sin(a) * h * 1.02)
+                     for a in np.linspace(0, math.pi, 17)])
+    out.append(_st(geo.tube(edge, 0.04, 6, color=trim), "gold"))
+    return out
+
+
+def stone_ground(w, d, color="#9a978e"):
+    """Flagstone apron in front of / around a building."""
+    p = geo.rbox(w, d, 0.08, r=0.03, k=1, color=color).tf((0, 0, 0.0))
+    return [_st(p, "stone")]
+
+
+def _banners(points, height=2.2, width=0.45, length=0.8):
+    parts, bones = [], []
+    for i, pt in enumerate(points):
+        ps, bb = banner(pt, height, TW, bone=f"banner_{i}", width=width, length=length)
+        parts += ps
+        bones += bb
+    return parts, bones
+
+
+# ---------------------------------------------------------------------------
+# CATS
+# ---------------------------------------------------------------------------
+
+@building("cat_barracks", "cats", "Кошачья казарма", "barracks", (4.5, 3.5))
+def cat_barracks():
+    stone, plaster, wood = "#a3a8b6", "#e3dccb", "#4b3426"
+    out = [battered_block(4.4, 3.2, 0.7, 0.06, stone)]
+    out += quoins(4.4, 3.2, 0, 0.7, stone, size=0.3, rows=1)
+    out.append(walls(3.8, 2.7, 0.7, 1.6, plaster))
+    out += timber_frame(3.8, 2.7, 0.7, 2.3, wood, size=0.14)
+    out += gable_roof(3.8, 2.7, 2.3, 1.6, TW, overhang=0.4, ridge_axis="x")
+    for sx in (-1, 1):   # cat-ear finials on the gable ends
+        out += cone_roof(0.25, 3.6, 0.8, TW, overhang=0.08, sag=0.1, segs=4, phase=math.pi / 4,
+                         finial="#e3a227", thick=0.06, center=(sx * 2.0, 0), tilt=(0, sx * 20, 0))
+    out += arched_door(0.9, 1.4, z0=0.7, y=-1.42, frame=stone)
+    for x in (-1.2, 1.2):
+        out += window(0.32, 0.5, x, 1.7, -1.4, frame=wood)
+    out += medallion_on_wall("cats", (0, -1.48, 2.45), r=0.24)
+    # weapon rack + training dummy
+    out.append(beam((1.9, -2.0, 0), (1.9, -2.0, 1.2), 0.1, wood))
+    out.append(beam((2.5, -2.0, 0), (2.5, -2.0, 1.2), 0.1, wood))
+    out.append(beam((1.85, -2.0, 1.1), (2.55, -2.0, 1.1), 0.08, wood))
+    dummy = geo.cyl(0.18, 0.7, 8, color="#d9c08a").tf((-2.2, -2.0, 0.5))
+    out.append(_st(dummy, "cloth"))
+    out.append(beam((-2.2, -2.0, 0), (-2.2, -2.0, 1.5), 0.08, wood))
+    out.append(_st(geo.qsphere(0.16, 3, "#d9c08a").tf((-2.2, -2.0, 1.38)), "cloth"))
+    ps, bones = _banners([(-1.9, -1.5, 0.7)], 2.0)
+    return out + ps, bones
+
+
+@building("cat_farm", "cats", "Рыбацкая хижина", "farm", (3.0, 3.0))
+def cat_farm():
+    wood, stone = "#6b4a33", "#a3a8b6"
+    out = [battered_block(2.4, 2.2, 0.4, 0.05, stone)]
+    out.append(walls(2.0, 1.8, 0.4, 1.2, "#cbb894"))
+    out += timber_frame(2.0, 1.8, 0.4, 1.6, "#4b3426", size=0.12, braces=False)
+    out += cone_roof(1.25, 1.6, 1.5, TW, overhang=0.35, sag=0.2, segs=4, phase=math.pi / 4)
+    out += arched_door(0.7, 1.0, z0=0.4, y=-0.95, frame=stone)
+    # fish drying rack
+    for x in (1.4, 2.2):
+        out.append(beam((x, -1.2, 0), (x, -1.2, 1.2), 0.07, wood))
+    out.append(beam((1.35, -1.2, 1.15), (2.25, -1.2, 1.15), 0.05, wood))
+    for i, x in enumerate(np.linspace(1.5, 2.1, 4)):
+        f = geo.ellipsoid(0.05, 0.03, 0.14, 3, "#9aa7b0").tf((x, -1.2, 0.98))
+        out.append(_st(f, "gloss"))
+        tail = geo.cone(0.05, 0.08, 4, "#7d8a94").tf((x, -1.2, 0.8), rot=(180, 0, 0))
+        out.append(_st(tail, "gloss"))
+    out += barrel((-1.4, -1.2, 0), s=0.9)
+    out += barrel((-1.7, -0.7, 0), s=0.8)
+    return out, []
+
+
+@building("cat_tower", "cats", "Кошачий насест", "tower", (2.0, 2.0))
+def cat_tower():
+    stone, wood = "#a3a8b6", "#4b3426"
+    out = [round_block(0.8, 3.4, 0.12, stone, segs=14)]
+    for z in (1.1, 2.2):
+        out.append(_st(geo.lathe([(0.82, z - 0.05), (0.88, z), (0.82, z + 0.05)], 14, cap_bottom=False,
+                                 cap_top=False, color="#6a7080"), "stone"))
+    deck = geo.lathe([(0.8, 3.35), (1.15, 3.4), (1.15, 3.52), (0.8, 3.54)], 16, color=wood)
+    out.append(_st(deck, "wood"))
+    for a in np.linspace(0, 2 * math.pi, 10, endpoint=False):
+        out.append(beam((math.cos(a) * 1.1, math.sin(a) * 1.1, 3.52), (math.cos(a) * 1.1, math.sin(a) * 1.1, 4.4),
+                        0.08, wood))
+    cushion = geo.rbox(0.9, 0.9, 0.18, r=0.08, k=2, color=TW).tf((0, 0, 3.62))
+    out.append(_st(cushion, "team"))
+    out += cone_roof(1.1, 4.4, 1.5, TW, overhang=0.25, sag=0.2, segs=12)
+    out += window(0.28, 0.45, 0, 1.6, -0.82, frame=wood)
+    out += window(0.28, 0.45, 0, 2.6, -0.8, frame=wood)
+    return out, []
+
+
+# ---------------------------------------------------------------------------
+# DOGS
+# ---------------------------------------------------------------------------
+
+def kennel_arch(w, h, z0, y, color=TW, wood="#5a3a22"):
+    """A big gable 'kennel' hood over a gate - the dogs' signature shape."""
+    out = []
+    pts = [(-w / 2 - 0.2, 0), (0, h), (w / 2 + 0.2, 0)]
+    for k, dz in ((0, 0), (1, -0.18)):
+        for side in (-1, 1):
+            a = np.array([side * (w / 2 + 0.25), y, z0])
+            b = np.array([0, y, z0 + h])
+            out.append(beam(a + np.array([0, -0.05 * k, dz]), b + np.array([0, -0.05 * k, dz]), 0.22, wood))
+    g = geo.extrude([(-w / 2, 0), (w / 2, 0), (0, h * 0.85)], 0.12, color).tf((0, y + 0.06, z0))
+    out.append(_st(g, "roof"))
+    return out
+
+
+@building("dog_hall", "dogs", "Псарный замок", "town_hall", (5.5, 5.0))
+def dog_hall():
+    stone, dark = "#b0a68e", "#7d745f"
+    out = [battered_block(5.4, 4.6, 0.8, 0.08, palette.mul(stone, 0.85))]
+    out += quoins(5.4, 4.6, 0.0, 0.8, palette.mul(stone, 0.8), size=0.34, rows=2)
+    out.append(battered_block(3.6, 3.0, 2.6, 0.06, stone, z0=0.8))
+    out += quoins(3.6, 3.0, 0.8, 2.6, dark, size=0.3)
+    # crenellations
+    for x in np.linspace(-1.55, 1.55, 6):
+        for y in (-1.5, 1.5):
+            out.append(_st(geo.rbox(0.36, 0.36, 0.4, r=0.04, k=1, color=stone).tf((x, y, 3.6)), "stone"))
+    out += gable_roof(3.0, 2.4, 3.4, 1.4, TW, overhang=0.35, ridge_axis="y")
+    for sx in (-1, 1):
+        cx = sx * 2.0
+        out += tower_square(cx, 0.6, 1.3, 0.8, 3.2, stone)
+        out += cone_roof(0.65, 4.0, 1.7, TW, overhang=0.3, sag=0.12, segs=4, phase=math.pi / 4, finial=None,
+                         center=(cx, 0.6))
+        out += bone_finial((cx, 0.6, 5.6), s=0.9)
+    out += arched_door(1.3, 1.9, z0=0.8, y=-1.62, frame=dark)
+    out += kennel_arch(1.6, 1.3, 2.8, -1.7)
+    out += medallion_on_wall("dogs", (0, -1.68, 3.35), r=0.26, gold="#ecc35e")
+    for x in (-1.1, 1.1):
+        out += window(0.32, 0.55, x, 2.4, -1.58, frame="#5a3a22")
+    for i in range(3):
+        st = geo.rbox(1.8 - i * 0.2, 0.4, 0.27, r=0.03, k=1, color=palette.mul(stone, 0.9)).tf(
+            (0, -2.55 + i * 0.25, 0.135 + i * 0.27))
+        out.append(_st(st, "stone"))
+    out += bone_finial((-1.4, -2.6, 0), s=1.2)
+    out += barrel((2.3, -2.4, 0))
+    out += crate((-2.4, -2.4, 0), rot=15)
+    ps, bones = _banners([(-2.75, -0.2, 0.8), (2.75, -0.2, 0.8)], 2.6)
+    return out + ps, bones
+
+
+@building("dog_barracks", "dogs", "Казарма стаи", "barracks", (4.5, 3.5))
+def dog_barracks():
+    wood, stone = "#7a5232", "#b0a68e"
+    out = [battered_block(4.2, 3.2, 0.5, 0.05, stone)]
+    out.append(walls(3.6, 2.6, 0.5, 1.5, "#c9a77c"))
+    out += timber_frame(3.6, 2.6, 0.5, 2.0, "#5a3a22", size=0.15)
+    out += gable_roof(3.6, 2.6, 2.0, 2.0, TW, overhang=0.45, sag=0.06, ridge_axis="y")
+    door = geo.extrude([(math.cos(a) * 0.65, 0.6 + math.sin(a) * 0.65) for a in np.linspace(0, math.pi, 12)]
+                       + [(-0.65, 0.0), (0.65, 0.0)], 0.1, "#2a1e16").tf((0, -1.36, 0.5))
+    out.append(_st(door, "wood"))
+    out += kennel_arch(1.4, 1.0, 1.8, -1.42)
+    out += bone_finial((0, -1.4, 3.95), s=0.7)
+    out += medallion_on_wall("dogs", (0, -1.45, 2.25), r=0.2, gold="#ecc35e")
+    bowl = geo.lathe([(0.25, 0), (0.3, 0.12), (0.26, 0.14), (0.2, 0.05)], 12, color="#b33a2a").tf((1.6, -2.0, 0))
+    out.append(_st(bowl, "metal"))
+    out += bone_finial((1.6, -2.0, 0.14), s=0.4)
+    ps, bones = _banners([(-2.0, -1.6, 0.5)], 2.0)
+    return out + ps, bones
+
+
+@building("dog_farm", "dogs", "Псарня и кухня", "farm", (3.0, 3.0))
+def dog_farm():
+    wood, stone = "#7a5232", "#b0a68e"
+    out = [battered_block(2.4, 2.2, 0.35, 0.05, stone)]
+    out.append(walls(2.0, 1.8, 0.35, 1.2, "#c9a77c"))
+    out += timber_frame(2.0, 1.8, 0.35, 1.55, "#5a3a22", size=0.12, braces=False)
+    out += gable_roof(2.0, 1.8, 1.55, 1.2, TW, overhang=0.35, ridge_axis="x")
+    out += chimney(0.6, 0.4, 2.0, 1.2)
+    out += arched_door(0.7, 1.0, z0=0.35, y=-0.95, frame=stone)
+    # hanging sausages
+    out.append(beam((-1.6, -1.1, 1.3), (-0.9, -1.1, 1.3), 0.05, wood))
+    for x in np.linspace(-1.5, -1.0, 4):
+        s_ = geo.capsule(0.04, 0.22, 6, 2, "#a8452e").tf((x, -1.1, 1.05))
+        out.append(_st(s_, "gloss"))
+    out += barrel((1.4, -1.1, 0), s=0.8)
+    out += bone_finial((1.1, -1.5, 0), s=0.5)
+    return out, []
+
+
+@building("dog_tower", "dogs", "Сторожевая будка", "tower", (2.0, 2.0))
+def dog_tower():
+    stone, wood = "#b0a68e", "#5a3a22"
+    out = [battered_block(1.5, 1.5, 3.0, 0.1, stone)]
+    out += quoins(1.5, 1.5, 0, 3.0, "#8d846f", size=0.26)
+    out.append(walls(1.5, 1.5, 3.0, 0.9, "#c9a77c"))
+    out += timber_frame(1.5, 1.5, 3.0, 3.9, wood, size=0.12, braces=False)
+    out += gable_roof(1.5, 1.5, 3.9, 1.0, TW, overhang=0.3, ridge_axis="y")
+    door = geo.extrude([(math.cos(a) * 0.35, 0.3 + math.sin(a) * 0.35) for a in np.linspace(0, math.pi, 10)]
+                       + [(-0.35, 0), (0.35, 0)], 0.08, "#1e1612").tf((0, -0.77, 3.05))
+    out.append(_st(door, "wood"))
+    out += bone_finial((0, 0, 4.95), s=0.5)
+    return out, []
+
+
+# ---------------------------------------------------------------------------
+# HAMSTERS
+# ---------------------------------------------------------------------------
+
+@building("ham_hall", "hamsters", "Кладовая", "town_hall", (5.5, 5.0))
+def ham_hall():
+    out = mound(2.4, 2.6)
+    out += round_door(0.75, 1.0, -2.25)
+    stoneframe = geo.extrude([(math.cos(a) * 1.15, math.sin(a) * 1.15 + 1.0) for a in np.linspace(0, math.pi, 12)]
+                             + [(-1.15, 0.0), (1.15, 0.0)], 0.5, "#b5a58a").tf((0, -2.05, 0))
+    out.append(_st(stoneframe, "stone"))
+    # terracotta roof cap on the mound
+    out += cone_roof(1.2, 2.3, 1.1, TW, overhang=0.35, sag=0.1, segs=14, finial="#e9c46a")
+    for a in (-55, 55):
+        x, y = math.sin(math.radians(a)) * 2.15, -math.cos(math.radians(a)) * 2.15
+        rw = round_door(0.28, 1.2, 0)
+        for q in rw:
+            q.V[:, 1] -= 0
+            q.tf(rot=(0, 0, a)).tf((x, y, 0))
+        out += rw
+    out += silo(-2.3, 1.0, 0.65, 2.4)
+    out += silo(2.2, 1.2, 0.55, 2.0)
+    out += chimney(0.8, 0.9, 2.0, 1.1)
+    wheel = geo.lathe([(0.55, -0.06), (0.62, 0), (0.55, 0.06), (0.5, 0)], 18, cap_bottom=False, cap_top=False,
+                      color="#e9c46a").tf(rot=(90, 0, 0)).tf((0, -2.3, 2.25))
+    out.append(_st(wheel, "gold"))
+    for a in range(0, 180, 45):
+        sp = geo.cyl(0.03, 1.0, 5, color="#e9c46a", z0=-0.5).tf(rot=(0, a, 0)).tf((0, -2.3, 2.25))
+        out.append(_st(sp, "gold"))
+    out += sack((1.4, -2.6, 0))
+    out += sack((1.75, -2.4, 0), s=0.8)
+    out += sack((-1.5, -2.6, 0), s=0.9)
+    ps, bones = _banners([(-1.2, -2.5, 0), (1.2, -2.5, 0)], 2.4)
+    return out + ps, bones
+
+
+@building("ham_barracks", "hamsters", "Нора ополчения", "barracks", (4.0, 3.5))
+def ham_barracks():
+    out = mound(1.8, 1.9)
+    out += round_door(0.6, 0.75, -1.72)
+    fr = geo.extrude([(math.cos(a) * 0.9, math.sin(a) * 0.9 + 0.75) for a in np.linspace(0, math.pi, 12)]
+                     + [(-0.9, 0), (0.9, 0)], 0.4, "#b5a58a").tf((0, -1.55, 0))
+    out.append(_st(fr, "stone"))
+    out += cone_roof(0.8, 1.7, 0.8, TW, overhang=0.25, sag=0.1, segs=12, finial="#e9c46a")
+    # training wheel
+    cx, cy, cz = 2.1, -0.6, 1.0
+    rim = geo.lathe([(0.85, -0.25), (0.9, -0.25), (0.9, 0.25), (0.85, 0.25)], 20, color="#8b6239").tf(
+        rot=(0, 90, 0)).tf((cx, cy, cz))
+    out.append(_st(rim, "wood"))
+    for a in range(0, 180, 30):
+        sp = geo.cyl(0.03, 1.7, 5, color="#6b4a2e", z0=-0.85).tf(rot=(a, 0, 0)).tf((cx, cy, cz))
+        out.append(_st(sp, "wood"))
+    for sx in (-0.3, 0.3):
+        out.append(beam((cx + sx, cy - 0.5, 0), (cx + sx, cy, cz), 0.09, "#6b4a2e"))
+    out += crate((-2.0, -1.0, 0), rot=10)
+    ps, bones = _banners([(-1.4, -1.6, 0)], 1.9)
+    return out + ps, bones
+
+
+@building("ham_farm", "hamsters", "Семечковое поле", "farm", (3.5, 3.0))
+def ham_farm():
+    out = []
+    soil = geo.rbox(3.2, 2.6, 0.12, r=0.05, k=1, color="#6e4e30").tf((0, 0.2, 0.06))
+    out.append(_st(soil, "foliage"))
+    rng = np.random.default_rng(3)
+    for x in np.linspace(-1.2, 1.2, 5):
+        for y in np.linspace(-0.6, 1.0, 3):
+            out += sunflower((x + rng.uniform(-0.1, 0.1), y, 0.1), h=rng.uniform(0.9, 1.3))
+    shed = walls(1.0, 0.8, 0.0, 0.8, "#d9c7a0").tf((1.6, -1.2, 0))
+    out.append(shed)
+    out += [q.tf((1.6, -1.2, 0)) for q in gable_roof(1.0, 0.8, 0.8, 0.5, TW, overhang=0.2, ridge_axis="x",
+                                                       thick=0.08)]
+    out += fence([(-1.7, -1.3, 0), (1.0, -1.3, 0)], 0.6)
+    out += sack((-1.4, -1.7, 0), s=0.8)
+    return out, []
+
+
+@building("ham_tower", "hamsters", "Нора-бункер", "tower", (2.2, 2.2))
+def ham_tower():
+    out = mound(1.1, 1.2)
+    out.append(_st(geo.rbox(0.9, 0.12, 0.14, r=0.03, k=1, color="#1a1410").tf((0, -1.0, 0.8)), "wood"))
+    for a in (-60, 60):
+        sl = geo.rbox(0.5, 0.12, 0.12, r=0.03, k=1, color="#1a1410").tf((0, -0.98, 0.7))
+        sl.tf(rot=(0, 0, a))
+        out.append(_st(sl, "wood"))
+    out.append(_st(geo.cyl(0.35, 0.9, 12, color="#b5a58a").tf((0, 0, 1.0)), "stone"))
+    out += cone_roof(0.35, 1.9, 0.6, TW, overhang=0.18, sag=0.1, segs=12, finial="#e9c46a", thick=0.07)
+    out += sack((0.9, -0.8, 0), s=0.8)
+    out += sack((-0.9, -0.85, 0), s=0.7)
+    return out, []
+
+
+# ---------------------------------------------------------------------------
+# HARES
+# ---------------------------------------------------------------------------
+
+@building("hare_hall", "hares", "Терем", "town_hall", (5.5, 5.0))
+def hare_hall():
+    birch = "#efe9dc"
+    out = [battered_block(5.2, 4.4, 0.6, 0.06, "#c9c3b4")]
+    out += [q.tf((0, 0.2, 0)) for q in log_wall(3.6, 2.8, 0.6, 2.0, birch)]
+    out += [q.tf((0, 0.2, 0)) for q in log_wall(2.4, 2.0, 2.6, 1.2, birch, r=0.09)]
+    out += [q.tf((0, 0.2, 0)) for q in gable_roof(3.6, 2.8, 2.55, 0.5, TW, overhang=0.35, ridge_axis="x",
+                                                   sag=0.0)]
+    out += [q.tf((0, 0.2, 0)) for q in onion_dome(0.75, 3.7, h=1.9)]
+    for sx in (-1, 1):
+        out += [q.tf((sx * 1.6, 1.1, 0)) for q in onion_dome(0.42, 2.6, h=1.0)]
+    out += kokoshnik_gable(1.8, 1.0, 2.0, -1.3)
+    out += arched_door(0.9, 1.3, z0=0.6, y=-1.32, frame="#c9a26a", frame_mat="wood")
+    for x in (-1.1, 1.1):
+        out += window(0.32, 0.5, x, 1.6, -1.3, frame="#a3243b", shutters="#a3243b")
+    # porch posts
+    for x in (-0.75, 0.75):
+        out.append(beam((x, -1.9, 0.6), (x, -1.9, 2.0), 0.14, "#c9a26a"))
+    out += carrot_row(1.4, 2.3, -2.0, n=4)
+    ps, bones = _banners([(-2.4, -1.6, 0.6), (2.4, -1.6, 0.6)], 2.4)
+    return out + ps, bones
+
+
+@building("hare_barracks", "hares", "Дружинная изба", "barracks", (4.0, 3.5))
+def hare_barracks():
+    out = [battered_block(4.0, 3.0, 0.4, 0.05, "#c9c3b4")]
+    out += log_wall(3.2, 2.4, 0.4, 1.5, "#d8c9a8")
+    out += gable_roof(3.2, 2.4, 1.95, 1.7, TW, overhang=0.35, ridge_axis="y", sag=0.08)
+    out += kokoshnik_gable(1.4, 0.8, 1.9, -1.3)
+    out += arched_door(0.8, 1.2, z0=0.4, y=-1.25, frame="#c9a26a", frame_mat="wood")
+    out += [q.tf((0, -1.3, 0)) for q in onion_dome(0.22, 3.6, h=0.6)]
+    ps, bones = _banners([(-1.9, -1.5, 0.4)], 2.0)
+    return out + ps, bones
+
+
+@building("hare_farm", "hares", "Огород с морковью", "farm", (3.5, 3.0))
+def hare_farm():
+    out = []
+    for y in (-0.9, -0.3, 0.3, 0.9):
+        out += carrot_row(-1.2, 0.8, y, n=6)
+    shed = walls(0.9, 0.9, 0.0, 0.9, "#d8c9a8").tf((1.6, 0.6, 0))
+    out.append(shed)
+    out += [q.tf((1.6, 0.6, 0)) for q in gable_roof(0.9, 0.9, 0.9, 0.6, TW, overhang=0.2, ridge_axis="y",
+                                                      thick=0.08)]
+    out += fence([(-1.6, -1.4, 0), (1.2, -1.4, 0), (1.2, -0.2, 0)], 0.55, "#c9a26a")
+    return out, []
+
+
+@building("hare_tower", "hares", "Смотровая кочка", "tower", (2.0, 2.0))
+def hare_tower():
+    out = mound(1.0, 0.6, color="#6f9a4a")
+    wood = "#c9a26a"
+    for x in (-0.5, 0.5):
+        for y in (-0.5, 0.5):
+            out.append(beam((x, y, 0.3), (x * 0.7, y * 0.7, 3.6), 0.12, wood))
+    for z in (1.4, 2.5):
+        for a, b_ in (((-0.45, -0.45), (0.45, -0.45)), ((0.45, -0.45), (0.45, 0.45)),
+                      ((0.45, 0.45), (-0.45, 0.45)), ((-0.45, 0.45), (-0.45, -0.45))):
+            out.append(beam((a[0], a[1], z), (b_[0], b_[1], z), 0.07, wood))
+    deck = geo.rbox(1.3, 1.3, 0.12, r=0.03, k=1, color=wood).tf((0, 0, 3.6))
+    out.append(_st(deck, "wood"))
+    out += onion_dome(0.5, 3.66, h=1.2)
+    drum = geo.cyl(0.25, 0.35, 12, color="#a3243b").tf(rot=(90, 0, 0)).tf((0.4, -0.5, 3.8))
+    out.append(_st(drum, "team"))
+    return out, []
+
+
+# ---------------------------------------------------------------------------
+# NEUTRAL
+# ---------------------------------------------------------------------------
+
+@building("gold_mine", "neutral", "Золотой рудник", "gold_mine", (4.5, 4.0))
+def gold_mine():
+    out = []
+    rng = np.random.default_rng(11)
+    for i in range(9):
+        a = math.pi * (0.1 + 0.8 * i / 8)
+        r = 2.0 + rng.uniform(-0.2, 0.2)
+        out += rock((math.cos(a) * r * 1.1, math.sin(a) * r * 0.8 + 0.2, 0), s=2.2 + rng.uniform(-0.3, 0.6),
+                    color="#7d776c", seed=i)
+    out += rock((0, 1.2, 0.6), s=3.4, color="#8a8478", seed=99)
+    # timber mine entrance
+    for x in (-0.7, 0.7):
+        out.append(beam((x, -0.6, 0), (x, -0.6, 1.8), 0.22, "#5a3a22"))
+    out.append(beam((-0.95, -0.6, 1.8), (0.95, -0.6, 1.8), 0.24, "#5a3a22"))
+    hole = geo.box(1.25, 0.4, 1.7, "#120e0a").tf((0, -0.45, 0.85))
+    out.append(_st(hole, "stone"))
+    for k in range(7):   # glowing gold veins / nuggets
+        g = geo.qsphere(0.12 + 0.06 * rng.random(), 2, "#ffd24a").tf(
+            (rng.uniform(-1.6, 1.6), rng.uniform(-0.3, 0.6), rng.uniform(0.4, 1.8)))
+        out.append(_st(g, "glow"))
+    rail = [beam((x, -0.6, 0.03), (x, -2.4, 0.03), 0.05, "#3a3a40") for x in (-0.3, 0.3)]
+    out += rail
+    for y in np.linspace(-0.8, -2.3, 6):
+        out.append(beam((-0.45, y, 0.0), (0.45, y, 0.0), 0.08, "#5a3a22"))
+    cart = geo.rbox(0.7, 0.9, 0.45, r=0.05, k=1, color="#6b4a2e").tf((0, -1.9, 0.38))
+    out.append(_st(cart, "wood"))
+    for x in (-0.35, 0.35):
+        for y in (-2.2, -1.6):
+            out.append(_st(geo.cyl(0.12, 0.06, 10, color="#3a3a40", z0=-0.03).tf(rot=(0, 90, 0)).tf((x, y, 0.13)), "metal"))
+    for k in range(5):
+        out.append(_st(geo.qsphere(0.1, 2, "#ffd24a").tf((rng.uniform(-0.25, 0.25), -1.9 + rng.uniform(-0.3, 0.3), 0.66)),
+                       "glow"))
+    return out, []
+
+
+@building("mill", "neutral", "Старая мельница", "shrine", (4.0, 4.0))
+def mill():
+    stone = "#a8a296"
+    out = [battered_block(2.6, 2.6, 1.0, 0.1, stone)]
+    out += quoins(2.6, 2.6, 0, 1.0, "#8a8478", size=0.3, rows=2)
+    out.append(walls(2.2, 2.2, 1.0, 1.6, "#e3dccb"))
+    out += timber_frame(2.2, 2.2, 1.0, 2.6, "#4b3426", size=0.14)
+    out += cone_roof(1.3, 2.6, 1.8, "#8a5a3a", overhang=0.35, segs=4, phase=math.pi / 4, mat="wood",
+                     finial="#d8b04a")
+    out += arched_door(0.7, 1.1, z0=1.0, y=-1.15, frame=stone)
+    # water wheel on the side, skinned to its own bone
+    wheel_parts = []
+    cx, cy, cz = 1.75, 0.0, 1.05
+    rim = geo.lathe([(1.05, -0.2), (1.12, -0.2), (1.12, 0.2), (1.05, 0.2)], 20, color="#6b4a2e")
+    rim.tf(rot=(0, 90, 0))
+    wheel_parts.append(rim)
+    for a in range(0, 180, 30):
+        wheel_parts.append(geo.cyl(0.05, 2.1, 5, color="#5a3a22", z0=-1.05).tf(rot=(a, 0, 0)))
+    for a in np.linspace(0, 2 * math.pi, 12, endpoint=False):
+        pd = geo.box(0.38, 0.06, 0.25, "#7a5232").tf((0, math.cos(a) * 1.15, math.sin(a) * 1.15),
+                                                     rot=(math.degrees(a), 0, 0))
+        wheel_parts.append(pd)
+    hub = geo.cyl(0.18, 0.5, 10, color="#3a3a40", z0=-0.25).tf(rot=(0, 90, 0))
+    wheel_parts.append(hub)
+    for q in wheel_parts:
+        q.tf((cx, cy, cz))
+        _st(q, q.mat if q.mat != "body" else "wood")
+        q.bone = "wheel"
+    out += wheel_parts
+    out.append(beam((1.3, 0, cz), (cx + 0.3, 0, cz), 0.12, "#3a3a40"))
+    bones = [("wheel", (cx, cy, cz), (cx + 0.5, cy, cz), "root")]
+    out += sack((-1.6, -1.2, 0))
+    out += sack((-1.9, -0.9, 0), s=0.8)
+    return out, bones
+
+
+@building("rat_pit", "rats", "Провал Крысиной Чумы", "spawner", (4.0, 4.0))
+def rat_pit():
+    out = []
+    rng = np.random.default_rng(5)
+    ring = geo.lathe([(1.4, -0.4), (1.6, 0.05), (2.1, 0.12), (2.4, 0.0)], 20, color="#5e5a4c")
+    ring.deform(lambda V: V + rng.normal(0, 0.05, V.shape))
+    out.append(_st(ring, "stone"))
+    pit = geo.cyl(1.45, 0.05, 20, color="#0c0f06").tf((0, 0, -0.38))
+    out.append(_st(pit, "stone"))
+    glow = geo.cyl(1.0, 0.04, 16, color="#9adf2a").tf((0, 0, -0.3))
+    out.append(_st(glow, "glow"))
+    for i in range(10):
+        a = 2 * math.pi * i / 10 + rng.uniform(-0.2, 0.2)
+        out += rock((math.cos(a) * 1.9, math.sin(a) * 1.9, 0), s=0.5 + rng.uniform(0, 0.5), color="#6e6a5e", seed=i)
+    for i in range(6):   # junk planks and spikes
+        a = rng.uniform(0, 2 * math.pi)
+        p0 = np.array([math.cos(a) * 1.5, math.sin(a) * 1.5, 0.05])
+        out.append(beam(p0, p0 + np.array([rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), rng.uniform(0.4, 1.0)]),
+                        0.1, "#4a3a2a"))
+    return out, []

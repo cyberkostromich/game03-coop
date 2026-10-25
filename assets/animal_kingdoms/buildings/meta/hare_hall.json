@@ -1,0 +1,21 @@
+{
+ "id": "hare_hall",
+ "faction": "hares",
+ "name": "Терем",
+ "role": "town_hall",
+ "footprint": [
+  5.5,
+  5.0
+ ],
+ "tris": 10856,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#a3243b",
+ "height": 5.99,
+ "file": "hare_hall.glb"
+}

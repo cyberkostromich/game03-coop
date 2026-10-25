@@ -5,8 +5,8 @@
  "role": "infantry",
  "species": "rat",
  "scale": 1.0,
- "tris": 8114,
- "bones": 29,
+ "tris": 10852,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.474,
- "height": 0.929,
+ "walk_speed": 1.123,
+ "height": 1.225,
  "team_default": "#6f8a2a",
  "file": "rat_raider.glb"
 }

@@ -5,8 +5,8 @@
  "role": "elite",
  "species": "hare",
  "scale": 1.08,
- "tris": 12886,
- "bones": 28,
+ "tris": 12500,
+ "bones": 30,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.566,
- "height": 1.434,
+ "walk_speed": 1.254,
+ "height": 1.723,
  "team_default": "#a3243b",
  "file": "hare_vityaz.glb"
 }

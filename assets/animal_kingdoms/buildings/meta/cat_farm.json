@@ -1,0 +1,21 @@
+{
+ "id": "cat_farm",
+ "faction": "cats",
+ "name": "Рыбацкая хижина",
+ "role": "farm",
+ "footprint": [
+  3.0,
+  3.0
+ ],
+ "tris": 8906,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2b3f8f",
+ "height": 3.67,
+ "file": "cat_farm.glb"
+}

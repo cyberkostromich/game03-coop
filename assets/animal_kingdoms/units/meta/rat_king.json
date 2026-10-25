@@ -4,9 +4,9 @@
  "name": "Крыса-Король",
  "role": "boss",
  "species": "rat",
- "scale": 2.1,
- "tris": 8296,
- "bones": 29,
+ "scale": 1.9,
+ "tris": 16000,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -49,8 +49,8 @@
    "loop": false
   }
  },
- "walk_speed": 0.994,
- "height": 1.982,
+ "walk_speed": 2.133,
+ "height": 2.417,
  "team_default": "#6f8a2a",
  "file": "rat_king.glb"
 }

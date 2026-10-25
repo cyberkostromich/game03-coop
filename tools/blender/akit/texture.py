@@ -29,6 +29,8 @@ PAINT = {
                     grime=0.25),
     "roof":  dict(edge=0.25, cavity=0.8, strands=0.0, scratch=0.0, weave=0.0, rough=0.75, metal=0.0,
                   grime=0.15, shingles=0.5),
+    "foliage": dict(edge=0.15, cavity=0.75, strands=0.28, scratch=0.0, weave=0.0, rough=0.9, metal=0.0,
+                    grime=0.2),
     "gloss": dict(edge=0.0, cavity=0.2, strands=0.0, scratch=0.0, weave=0.0, rough=0.12, metal=0.0),
     "glow":  dict(edge=0.0, cavity=0.0, strands=0.0, scratch=0.0, weave=0.0, rough=0.5, metal=0.0),
 }

@@ -1,0 +1,56 @@
+{
+ "id": "dog_hero_rex",
+ "faction": "dogs",
+ "name": "Король Рекс Верный",
+ "role": "hero",
+ "species": "dog",
+ "scale": 1.22,
+ "tris": 15999,
+ "bones": 32,
+ "clips": {
+  "Idle": {
+   "frames": 72,
+   "seconds": 2.4,
+   "loop": true
+  },
+  "IdleSpecial": {
+   "frames": 120,
+   "seconds": 4.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": 26,
+   "seconds": 0.867,
+   "loop": true
+  },
+  "Attack": {
+   "frames": 30,
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Hit": {
+   "frames": 14,
+   "seconds": 0.467,
+   "loop": false
+  },
+  "Death": {
+   "frames": 42,
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Victory": {
+   "frames": 48,
+   "seconds": 1.6,
+   "loop": true
+  },
+  "Cast": {
+   "frames": 40,
+   "seconds": 1.333,
+   "loop": false
+  }
+ },
+ "walk_speed": 1.294,
+ "height": 1.61,
+ "team_default": "#2f6b3a",
+ "file": "dog_hero_rex.glb"
+}

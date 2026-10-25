@@ -209,6 +209,7 @@ export class Hud {
     const owner = P ? P.name : e.owner === 4 ? 'Крысиная Чума' : 'Нейтральные';
     if (e.kind === 'building') {
       if (e.type === 'gold_mine') return `Золото: ${Math.floor(e.gold)}`;
+      if (e.type === 'rat_pit') return `Провал Чумы · рабочие засыпают его быстрее воинов`;
       const tier = e.def.role === 'town_hall' && e.tier > 1 ? ` · ${e.def.upgrades.find(u => u.tier === e.tier)?.name}` : '';
       return `${ROLE[e.def.role] || ''}${tier} · ${owner}`;
     }

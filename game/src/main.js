@@ -402,9 +402,15 @@ class App {
     const W = this.terrain.water.uniforms;
     W.dayLight.value = 0.45 + 0.55 * day;
     W.sunDir.value.copy(d);
+    // full-screen tint for big spells
     if (this._flash) {
-      this._flash.t += dt;
-      if (this._flash.t > 1.2) this._flash = null;
+      const f = this._flash;
+      if (!this.flashEl) { this.flashEl = document.createElement('div'); this.flashEl.style.cssText = 'position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply'; this.root.insertBefore(this.flashEl, document.getElementById('hud')); }
+      f.t += dt;
+      const k = f.t < 0.25 ? f.t / 0.25 : Math.max(0, 1 - (f.t - 0.25) / 1.6);
+      const [r, g, b] = f.col.map(c => Math.round(255 - (255 - c * 255) * f.a * k));
+      this.flashEl.style.background = `rgb(${r},${g},${b})`;
+      if (f.t > 1.85) { this._flash = null; this.flashEl.style.background = 'transparent'; }
     }
     void dt;
   }

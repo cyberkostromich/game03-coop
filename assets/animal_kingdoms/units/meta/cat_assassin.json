@@ -5,8 +5,8 @@
  "role": "elite",
  "species": "cat",
  "scale": 1.0,
- "tris": 9176,
- "bones": 29,
+ "tris": 12500,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.325,
- "height": 1.032,
+ "walk_speed": 0.829,
+ "height": 1.328,
  "team_default": "#2b3f8f",
  "file": "cat_assassin.glb"
 }

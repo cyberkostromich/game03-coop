@@ -1,0 +1,21 @@
+{
+ "id": "dog_barracks",
+ "faction": "dogs",
+ "name": "Казарма стаи",
+ "role": "barracks",
+ "footprint": [
+  4.5,
+  3.5
+ ],
+ "tris": 12214,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2f6b3a",
+ "height": 4.276,
+ "file": "dog_barracks.glb"
+}

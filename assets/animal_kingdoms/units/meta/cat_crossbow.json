@@ -5,8 +5,8 @@
  "role": "ranged",
  "species": "cat",
  "scale": 1.0,
- "tris": 9122,
- "bones": 29,
+ "tris": 12500,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.325,
- "height": 1.033,
+ "walk_speed": 0.829,
+ "height": 1.397,
  "team_default": "#2b3f8f",
  "file": "cat_crossbow.glb"
 }

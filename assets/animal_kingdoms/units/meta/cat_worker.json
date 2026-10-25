@@ -4,9 +4,9 @@
  "name": "Котёнок-подмастерье",
  "role": "worker",
  "species": "cat",
- "scale": 0.84,
- "tris": 8362,
- "bones": 29,
+ "scale": 0.86,
+ "tris": 9000,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -49,8 +49,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.273,
- "height": 0.888,
+ "walk_speed": 0.713,
+ "height": 1.172,
  "team_default": "#2b3f8f",
  "file": "cat_worker.glb"
 }

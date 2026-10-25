@@ -1,0 +1,21 @@
+{
+ "id": "hare_farm",
+ "faction": "hares",
+ "name": "Огород с морковью",
+ "role": "farm",
+ "footprint": [
+  3.5,
+  3.0
+ ],
+ "tris": 5148,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#a3243b",
+ "height": 1.628,
+ "file": "hare_farm.glb"
+}

@@ -4,9 +4,9 @@
  "name": "Княгиня Беляна",
  "role": "hero",
  "species": "hare",
- "scale": 1.22,
- "tris": 9076,
- "bones": 28,
+ "scale": 1.2,
+ "tris": 14522,
+ "bones": 30,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -49,8 +49,8 @@
    "loop": false
   }
  },
- "walk_speed": 0.639,
- "height": 1.619,
+ "walk_speed": 1.393,
+ "height": 1.914,
  "team_default": "#a3243b",
  "file": "hare_hero_belyana.glb"
 }

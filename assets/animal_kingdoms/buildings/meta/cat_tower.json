@@ -1,0 +1,21 @@
+{
+ "id": "cat_tower",
+ "faction": "cats",
+ "name": "Кошачий насест",
+ "role": "tower",
+ "footprint": [
+  2.0,
+  2.0
+ ],
+ "tris": 4818,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2b3f8f",
+ "height": 6.47,
+ "file": "cat_tower.glb"
+}

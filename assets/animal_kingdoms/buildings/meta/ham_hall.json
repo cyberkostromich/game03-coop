@@ -1,0 +1,21 @@
+{
+ "id": "ham_hall",
+ "faction": "hamsters",
+ "name": "Кладовая",
+ "role": "town_hall",
+ "footprint": [
+  5.5,
+  5.0
+ ],
+ "tris": 10786,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#c0592f",
+ "height": 3.97,
+ "file": "ham_hall.glb"
+}

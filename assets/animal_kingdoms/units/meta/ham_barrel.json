@@ -5,8 +5,8 @@
  "role": "elite",
  "species": "hamster",
  "scale": 1.1,
- "tris": 8078,
- "bones": 27,
+ "tris": 12499,
+ "bones": 29,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.271,
- "height": 0.936,
+ "walk_speed": 0.656,
+ "height": 1.228,
  "team_default": "#c0592f",
  "file": "ham_barrel.glb"
 }

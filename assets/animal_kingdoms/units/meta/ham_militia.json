@@ -5,8 +5,8 @@
  "role": "infantry",
  "species": "hamster",
  "scale": 1.0,
- "tris": 10486,
- "bones": 27,
+ "tris": 12499,
+ "bones": 29,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -44,8 +44,8 @@
    "loop": true
   }
  },
- "walk_speed": 0.246,
- "height": 0.757,
+ "walk_speed": 0.597,
+ "height": 1.016,
  "team_default": "#c0592f",
  "file": "ham_militia.glb"
 }

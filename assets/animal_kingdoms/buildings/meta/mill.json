@@ -1,0 +1,21 @@
+{
+ "id": "mill",
+ "faction": "neutral",
+ "name": "Старая мельница",
+ "role": "shrine",
+ "footprint": [
+  4.0,
+  4.0
+ ],
+ "tris": 11002,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#8a7a5a",
+ "height": 4.97,
+ "file": "mill.glb"
+}

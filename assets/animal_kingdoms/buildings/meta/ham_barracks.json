@@ -1,0 +1,21 @@
+{
+ "id": "ham_barracks",
+ "faction": "hamsters",
+ "name": "Нора ополчения",
+ "role": "barracks",
+ "footprint": [
+  4.0,
+  3.5
+ ],
+ "tris": 3940,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#c0592f",
+ "height": 3.07,
+ "file": "ham_barracks.glb"
+}

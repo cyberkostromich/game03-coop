@@ -4,9 +4,9 @@
  "name": "Магистр Пухлощёк",
  "role": "hero",
  "species": "hamster",
- "scale": 1.22,
- "tris": 9380,
- "bones": 27,
+ "scale": 1.2,
+ "tris": 15344,
+ "bones": 29,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -24,8 +24,8 @@
    "loop": true
   },
   "Attack": {
-   "frames": 34,
-   "seconds": 1.133,
+   "frames": 30,
+   "seconds": 1.0,
    "loop": false
   },
   "Hit": {
@@ -49,8 +49,8 @@
    "loop": false
   }
  },
- "walk_speed": 0.301,
- "height": 1.074,
+ "walk_speed": 0.716,
+ "height": 1.392,
  "team_default": "#c0592f",
  "file": "ham_hero_puhloshek.glb"
 }

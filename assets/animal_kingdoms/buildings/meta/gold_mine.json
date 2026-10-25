@@ -1,0 +1,21 @@
+{
+ "id": "gold_mine",
+ "faction": "neutral",
+ "name": "Золотой рудник",
+ "role": "gold_mine",
+ "footprint": [
+  4.5,
+  4.0
+ ],
+ "tris": 3108,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#8a7a5a",
+ "height": 2.991,
+ "file": "gold_mine.glb"
+}

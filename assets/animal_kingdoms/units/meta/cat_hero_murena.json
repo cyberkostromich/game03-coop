@@ -4,9 +4,9 @@
  "name": "Герцогиня Мурена Когтистая",
  "role": "hero",
  "species": "cat",
- "scale": 1.22,
- "tris": 9724,
- "bones": 29,
+ "scale": 1.2,
+ "tris": 15999,
+ "bones": 31,
  "clips": {
   "Idle": {
    "frames": 72,
@@ -49,8 +49,8 @@
    "loop": false
   }
  },
- "walk_speed": 0.396,
- "height": 1.259,
+ "walk_speed": 0.995,
+ "height": 1.594,
  "team_default": "#2b3f8f",
  "file": "cat_hero_murena.glb"
 }

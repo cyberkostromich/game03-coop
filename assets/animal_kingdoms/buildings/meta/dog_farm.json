@@ -1,0 +1,21 @@
+{
+ "id": "dog_farm",
+ "faction": "dogs",
+ "name": "Псарня и кухня",
+ "role": "farm",
+ "footprint": [
+  3.0,
+  3.0
+ ],
+ "tris": 8768,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2f6b3a",
+ "height": 3.26,
+ "file": "dog_farm.glb"
+}

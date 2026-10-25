@@ -1,0 +1,21 @@
+{
+ "id": "cat_hall",
+ "faction": "cats",
+ "name": "Кошачий замок",
+ "role": "town_hall",
+ "footprint": [
+  5.5,
+  5.0
+ ],
+ "tris": 31716,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2b3f8f",
+ "height": 7.67,
+ "file": "cat_hall.glb"
+}

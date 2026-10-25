@@ -1,0 +1,21 @@
+{
+ "id": "dog_hall",
+ "faction": "dogs",
+ "name": "Псарный замок",
+ "role": "town_hall",
+ "footprint": [
+  5.5,
+  5.0
+ ],
+ "tris": 39196,
+ "clips": {
+  "Idle": {
+   "frames": 90,
+   "seconds": 3.0,
+   "loop": true
+  }
+ },
+ "team_default": "#2f6b3a",
+ "height": 6.019,
+ "file": "dog_hall.glb"
+}
