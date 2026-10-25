@@ -91,13 +91,39 @@ def band(b, z, color, mat="cloth", thick=0.018, inflate=1.1, segs=18, bone=None,
     return p
 
 
+_NOT_TORSO = ("weapon", "shield", "fur.arms", "gauntlet", "vambrace", "couter", "fur.legs", "fur.tail",
+              "cape", "sabaton", "greave", "poleyn", "cuisse", "fur.head", "fur.ears", "hat", "helm", "pauldron")
+
+
+def fit_r(b, parts, z, floor="cloth", band=0.02):
+    """Snug radius at height z over whatever is already worn there: a belt
+    sits on the outermost torso layer instead of a fixed armour layer."""
+    from .armor import layer_r
+    rx, ry = layer_r(b, z, floor)
+    for p in parts or ():
+        g = p.group or ""
+        if g.startswith(_NOT_TORSO):
+            continue
+        m = np.abs(p.V[:, 2] - z) < band
+        if not m.any():
+            continue
+        rx = max(rx, float(np.abs(p.V[m, 0]).max()))
+        ry = max(ry, float(np.abs(p.V[m, 1]).max()))
+    return rx, ry
+
+
 @tagged("belt")
-def belt(b, leather, buckle=palette.GOLD, z=None, pouch=None):
-    """Belt on the 'belt' torso layer, above the fauld."""
+def belt(b, leather, buckle=palette.GOLD, z=None, pouch=None, fit=None):
+    """Belt hugging the outermost layer at its height (or the 'belt' layer)."""
     z = b.hip_h + 0.065 if z is None else z
     from .armor import layer_r
-    lrx, lry = layer_r(b, z, "belt")
+    if fit is not None:
+        lrx, lry = fit_r(b, fit, z)
+        lrx, lry = lrx + 0.013, lry + 0.013
+    else:
+        lrx, lry = layer_r(b, z, "belt")
     out = [band(b, z, leather, "body", thick=0.03, inflate=1.0, add=0.0, radius=(lrx, lry))]
+    out[0].fit = (lrx, lry)
     ry = lry + 0.016
     bk = geo.rbox(0.05, 0.02, 0.042, 0.006, color=buckle).tf((0, -ry, z))
     out.append(bk.on("hips", "metal"))

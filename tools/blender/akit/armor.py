@@ -769,9 +769,9 @@ def medallion(faction, metal, r=0.055, emblem_color=None):
 
 
 @tagged("medal")
-def on_belt(b, parts, z=None):
+def on_belt(b, parts, z=None, ry=None):
     z = b.hip_h + 0.065 if z is None else z
-    ry = layer_r(b, z, "over")[1] + 0.03     # in front of tabards and panels
+    ry = (layer_r(b, z, "over")[1] if ry is None else ry) + 0.03     # in front of tabards and panels
     out = []
     for p in parts:
         q = p.copy()

@@ -1,0 +1,591 @@
+{
+ "cat_hall": {
+  "faction": "cats",
+  "role": "town_hall",
+  "hp": 1800,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 385,
+   "wood": 185,
+   "food": 0
+  },
+  "build_time": 120,
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "produces": [
+   "cat_worker",
+   "hero:murena",
+   "hero:barsik",
+   "hero:valeriana"
+  ],
+  "pop": 12,
+  "tier": 1,
+  "model": "cat_hall",
+  "dropoff": [
+   "gold",
+   "wood",
+   "food"
+  ],
+  "upgrades": [
+   {
+    "tier": 2,
+    "name": "Кошачья цитадель",
+    "cost": {
+     "gold": 320,
+     "wood": 210,
+     "food": 0
+    },
+    "time": 75,
+    "hp": 2400
+   },
+   {
+    "tier": 3,
+    "name": "Башня-когтеточка",
+    "cost": {
+     "gold": 360,
+     "wood": 250,
+     "food": 0
+    },
+    "time": 95,
+    "hp": 3000
+   }
+  ],
+  "name": "Кошачий замок"
+ },
+ "cat_barracks": {
+  "faction": "cats",
+  "role": "barracks",
+  "hp": 1200,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 160,
+   "wood": 60,
+   "food": 0
+  },
+  "build_time": 60,
+  "footprint": [
+   4.5,
+   3.5
+  ],
+  "produces": [
+   "cat_swordsman",
+   "cat_crossbow",
+   "cat_assassin"
+  ],
+  "pop": 0,
+  "tier": 1,
+  "model": "cat_barracks",
+  "name": "Кошачья казарма"
+ },
+ "cat_farm": {
+  "faction": "cats",
+  "role": "farm",
+  "hp": 500,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 80,
+   "wood": 20,
+   "food": 0
+  },
+  "build_time": 35,
+  "footprint": [
+   3.0,
+   3.0
+  ],
+  "produces": [],
+  "pop": 8,
+  "tier": 1,
+  "model": "cat_farm",
+  "food_trickle": 0.6,
+  "name": "Рыбацкая хижина"
+ },
+ "cat_tower": {
+  "faction": "cats",
+  "role": "tower",
+  "hp": 550,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 90,
+   "wood": 80,
+   "food": 0
+  },
+  "build_time": 45,
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "produces": [],
+  "pop": 0,
+  "tier": 1,
+  "model": "cat_tower",
+  "attack": {
+   "damage": [
+    18,
+    22
+   ],
+   "attack_type": "pierce",
+   "cooldown": 1.2,
+   "range": 8.5
+  },
+  "name": "Кошачий насест"
+ },
+ "dog_hall": {
+  "faction": "dogs",
+  "role": "town_hall",
+  "hp": 1800,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 385,
+   "wood": 185,
+   "food": 0
+  },
+  "build_time": 120,
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "produces": [
+   "dog_worker",
+   "hero:rex",
+   "hero:hvatych",
+   "hero:bigl"
+  ],
+  "pop": 12,
+  "tier": 1,
+  "model": "dog_hall",
+  "dropoff": [
+   "gold",
+   "wood",
+   "food"
+  ],
+  "upgrades": [
+   {
+    "tier": 2,
+    "name": "Крепость стаи",
+    "cost": {
+     "gold": 320,
+     "wood": 210,
+     "food": 0
+    },
+    "time": 75,
+    "hp": 2400
+   },
+   {
+    "tier": 3,
+    "name": "Королевская конура",
+    "cost": {
+     "gold": 360,
+     "wood": 250,
+     "food": 0
+    },
+    "time": 95,
+    "hp": 3000
+   }
+  ],
+  "name": "Псарный замок"
+ },
+ "dog_barracks": {
+  "faction": "dogs",
+  "role": "barracks",
+  "hp": 1200,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 160,
+   "wood": 60,
+   "food": 0
+  },
+  "build_time": 60,
+  "footprint": [
+   4.5,
+   3.5
+  ],
+  "produces": [
+   "dog_halberdier",
+   "dog_archer",
+   "dog_bulldog_guard"
+  ],
+  "pop": 0,
+  "tier": 1,
+  "model": "dog_barracks",
+  "name": "Казарма стаи"
+ },
+ "dog_farm": {
+  "faction": "dogs",
+  "role": "farm",
+  "hp": 500,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 80,
+   "wood": 20,
+   "food": 0
+  },
+  "build_time": 35,
+  "footprint": [
+   3.0,
+   3.0
+  ],
+  "produces": [],
+  "pop": 8,
+  "tier": 1,
+  "model": "dog_farm",
+  "food_trickle": 0.6,
+  "name": "Псарня и кухня"
+ },
+ "dog_tower": {
+  "faction": "dogs",
+  "role": "tower",
+  "hp": 550,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 90,
+   "wood": 80,
+   "food": 0
+  },
+  "build_time": 45,
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "produces": [],
+  "pop": 0,
+  "tier": 1,
+  "model": "dog_tower",
+  "attack": {
+   "damage": [
+    18,
+    22
+   ],
+   "attack_type": "pierce",
+   "cooldown": 1.2,
+   "range": 8.5
+  },
+  "name": "Сторожевая будка"
+ },
+ "ham_hall": {
+  "faction": "hamsters",
+  "role": "town_hall",
+  "hp": 1800,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 385,
+   "wood": 185,
+   "food": 0
+  },
+  "build_time": 120,
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "produces": [
+   "ham_worker",
+   "hero:puhloshek",
+   "hero:kolesov",
+   "hero:vatrushkin"
+  ],
+  "pop": 12,
+  "tier": 1,
+  "model": "ham_hall",
+  "dropoff": [
+   "gold",
+   "wood",
+   "food"
+  ],
+  "upgrades": [
+   {
+    "tier": 2,
+    "name": "Большая кладовая",
+    "cost": {
+     "gold": 320,
+     "wood": 210,
+     "food": 0
+    },
+    "time": 75,
+    "hp": 2400
+   },
+   {
+    "tier": 3,
+    "name": "Великая Закрома",
+    "cost": {
+     "gold": 360,
+     "wood": 250,
+     "food": 0
+    },
+    "time": 95,
+    "hp": 3000
+   }
+  ],
+  "name": "Кладовая"
+ },
+ "ham_barracks": {
+  "faction": "hamsters",
+  "role": "barracks",
+  "hp": 1200,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 160,
+   "wood": 60,
+   "food": 0
+  },
+  "build_time": 60,
+  "footprint": [
+   4.0,
+   3.5
+  ],
+  "produces": [
+   "ham_militia",
+   "ham_slinger",
+   "ham_barrel"
+  ],
+  "pop": 0,
+  "tier": 1,
+  "model": "ham_barracks",
+  "name": "Нора ополчения"
+ },
+ "ham_farm": {
+  "faction": "hamsters",
+  "role": "farm",
+  "hp": 500,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 80,
+   "wood": 20,
+   "food": 0
+  },
+  "build_time": 35,
+  "footprint": [
+   3.5,
+   3.0
+  ],
+  "produces": [],
+  "pop": 8,
+  "tier": 1,
+  "model": "ham_farm",
+  "food_trickle": 0.6,
+  "name": "Семечковое поле"
+ },
+ "ham_tower": {
+  "faction": "hamsters",
+  "role": "tower",
+  "hp": 550,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 90,
+   "wood": 80,
+   "food": 0
+  },
+  "build_time": 45,
+  "footprint": [
+   2.2,
+   2.2
+  ],
+  "produces": [],
+  "pop": 0,
+  "tier": 1,
+  "model": "ham_tower",
+  "attack": {
+   "damage": [
+    18,
+    22
+   ],
+   "attack_type": "pierce",
+   "cooldown": 1.2,
+   "range": 8.5
+  },
+  "name": "Нора-бункер"
+ },
+ "hare_hall": {
+  "faction": "hares",
+  "role": "town_hall",
+  "hp": 1800,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 385,
+   "wood": 185,
+   "food": 0
+  },
+  "build_time": 120,
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "produces": [
+   "hare_worker",
+   "hero:belyana",
+   "hero:kosoy",
+   "hero:morkovna"
+  ],
+  "pop": 12,
+  "tier": 1,
+  "model": "hare_hall",
+  "dropoff": [
+   "gold",
+   "wood",
+   "food"
+  ],
+  "upgrades": [
+   {
+    "tier": 2,
+    "name": "Княжий терем",
+    "cost": {
+     "gold": 320,
+     "wood": 210,
+     "food": 0
+    },
+    "time": 75,
+    "hp": 2400
+   },
+   {
+    "tier": 3,
+    "name": "Белокаменный Кремль",
+    "cost": {
+     "gold": 360,
+     "wood": 250,
+     "food": 0
+    },
+    "time": 95,
+    "hp": 3000
+   }
+  ],
+  "name": "Терем"
+ },
+ "hare_barracks": {
+  "faction": "hares",
+  "role": "barracks",
+  "hp": 1200,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 160,
+   "wood": 60,
+   "food": 0
+  },
+  "build_time": 60,
+  "footprint": [
+   4.0,
+   3.5
+  ],
+  "produces": [
+   "hare_spearman",
+   "hare_archer",
+   "hare_vityaz"
+  ],
+  "pop": 0,
+  "tier": 1,
+  "model": "hare_barracks",
+  "name": "Дружинная изба"
+ },
+ "hare_farm": {
+  "faction": "hares",
+  "role": "farm",
+  "hp": 500,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 80,
+   "wood": 20,
+   "food": 0
+  },
+  "build_time": 35,
+  "footprint": [
+   3.5,
+   3.0
+  ],
+  "produces": [],
+  "pop": 8,
+  "tier": 1,
+  "model": "hare_farm",
+  "food_trickle": 0.6,
+  "name": "Огород с морковью"
+ },
+ "hare_tower": {
+  "faction": "hares",
+  "role": "tower",
+  "hp": 550,
+  "armor": 5,
+  "armor_type": "fortified",
+  "cost": {
+   "gold": 90,
+   "wood": 80,
+   "food": 0
+  },
+  "build_time": 45,
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "produces": [],
+  "pop": 0,
+  "tier": 1,
+  "model": "hare_tower",
+  "attack": {
+   "damage": [
+    18,
+    22
+   ],
+   "attack_type": "pierce",
+   "cooldown": 1.2,
+   "range": 8.5
+  },
+  "name": "Смотровая кочка"
+ },
+ "gold_mine": {
+  "faction": "neutral",
+  "role": "gold_mine",
+  "hp": 99999,
+  "armor": 99,
+  "armor_type": "fortified",
+  "footprint": [
+   4.5,
+   4.0
+  ],
+  "gold": 12500,
+  "model": "gold_mine",
+  "name": "Золотой рудник"
+ },
+ "mill": {
+  "faction": "neutral",
+  "role": "shrine",
+  "hp": 99999,
+  "armor": 99,
+  "armor_type": "fortified",
+  "footprint": [
+   4.0,
+   4.0
+  ],
+  "aura": {
+   "regen": 2.0,
+   "income": 0.1
+  },
+  "model": "mill",
+  "name": "Старая мельница"
+ },
+ "rat_pit": {
+  "faction": "rats",
+  "role": "spawner",
+  "hp": 1500,
+  "armor": 3,
+  "armor_type": "fortified",
+  "footprint": [
+   4.0,
+   4.0
+  ],
+  "model": "rat_pit",
+  "fillable": true,
+  "name": "Провал Крысиной Чумы"
+ }
+}

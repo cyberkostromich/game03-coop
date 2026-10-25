@@ -1,0 +1,13 @@
+{
+  "_doc": "Attack type x armor type multipliers (GDD section 2). Shared by both faction sets.",
+  "armor": ["light", "medium", "heavy", "fortified", "hero"],
+  "attack": {
+    "pierce":  [1.5, 0.75, 0.5, 0.25, 0.5],
+    "slash":   [1.0, 1.0, 1.0, 0.5, 1.0],
+    "polearm": [1.0, 0.75, 1.75, 0.25, 0.75],
+    "siege":   [0.5, 0.5, 0.5, 2.0, 0.25],
+    "fire":    [1.25, 1.0, 0.75, 1.5, 0.75],
+    "hero":    [1.0, 1.0, 1.0, 0.75, 1.0]
+  },
+  "armor_reduction_per_point": 0.06
+}

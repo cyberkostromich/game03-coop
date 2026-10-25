@@ -165,10 +165,11 @@ def leather_set(b, k, pauldron=0.85, side="both"):
     return out
 
 
-def belt(b, k, medal=True, z=None):
-    out = gear.belt(b, k.leather, buckle=k.trim, z=z)
+def belt(b, k, medal=True, z=None, fit=None):
+    out = gear.belt(b, k.leather, buckle=k.trim, z=z, fit=fit)
     if medal:
-        out += armor.on_belt(b, armor.medallion(k.faction, k.trim, r=0.055), z=z)
+        ry = max(out[0].fit[1], armor.layer_r(b, z or b.hip_h + 0.065, "plate")[1]) if fit is not None else None
+        out += armor.on_belt(b, armor.medallion(k.faction, k.trim, r=0.055), z=z, ry=ry)
     return out
 
 
@@ -188,7 +189,7 @@ def cat_worker():
     p += tunic(b, "#d8cfbf", flare=0.25)
     p.append(gear.front_panel(b, b.neck_z - 0.06, b.hip_h - 0.12, 0.1, "#7a5232", "body",
                               tip="round", inflate=1.12))
-    p += gear.belt(b, palette.LEATHER, pouch="#6b4a33")
+    p += gear.belt(b, palette.LEATHER, pouch="#6b4a33", fit=p)
     p += gear.cap(b, TW, mat="team", tilt=-14)
     p += gear.in_hand(b, gear.hammer(size=1.2), "R")
     return spec(b, p, style="tool", worker=True)
@@ -203,7 +204,7 @@ def cat_swordsman():
     p += skirt(b)
     p += armor.brigandine(b, TW, k.rivet, breast_z=b.hip_h + b.torso_h * 0.42, rows=3)
     p += plate_set(b, k, pauldron=1.05, legs=True)
-    p += belt(b, k)
+    p += belt(b, k, fit=p)
     p += armor.tabard_strip(b, TW, k.trim)
     p += armor.sallet(b, k.plate, k.trim, team=TW)
     p += armor.ear_rings(b, k.trim)
@@ -220,7 +221,7 @@ def cat_crossbow():
     p = beast.fur_body(b, sleeve=k.cloth, boots=k.leather, paw="#5a3826")
     p += tunic(b, TW, mat="team", flare=0.3, trim=k.trim, trim_mat="gold")
     p += leather_set(b, k, pauldron=0.8, side="L")
-    p += belt(b, k, medal=False)
+    p += belt(b, k, medal=False, fit=p)
     p += gear.cap(b, "#2c3352", feather=k.trim, mat="cloth", tilt=16)
     p += gear.in_hand(b, gear.crossbow(steel=k.plate), "R", scale=1.35)
     p += gear.on_hip(b, [geo.cyl(0.045, 0.2, 8, color=k.leather).tf((0, 0, -0.12))], "L", rot=(0, 15, 0))
@@ -240,7 +241,7 @@ def cat_assassin():
         p += armor.vambrace(b, s, plate, silver, mat="body")
     p += gear.hood(b, "#2d3150", mat="cloth", open_face=0.72)
     p += gear.scarf(b, TW)
-    p += gear.belt(b, "#3b2a24", buckle=silver, pouch="#3b2a24")
+    p += gear.belt(b, "#3b2a24", buckle=silver, pouch="#3b2a24", fit=p)
     p += gear.in_hand(b, gear.dagger(0.3, steel=silver), "R", scale=1.35)
     p += gear.in_hand(b, gear.dagger(0.3, steel=silver), "L", scale=1.35)
     return spec(b, p, style="dagger2", special="groom")
@@ -256,7 +257,7 @@ def cat_hero_murena():
     p += skirt(b, drop=0.16, flare=0.25)
     p += plate_set(b, k, pauldron=1.5, tiers=3, spikes=3, plate=silver, gorget=False)
     p += gear.cape(b, TW, collar="#f6f2ea", length=(b.shoulder_z + 0.02 - short_cape(b)) if short_cape(b) else None)
-    p += gear.belt(b, "#2c3352", buckle=k.trim)
+    p += gear.belt(b, "#2c3352", buckle=k.trim, fit=p)
     p += armor.tabard_strip(b, TW, k.trim, length=0.36, width=0.085)
     p += armor.on_belt(b, armor.medallion("cats", k.trim, r=0.065))
     p += gear.crown(b, gold=k.trim, gem="#3aa0e0", points=5, h=0.07, r_scale=0.66)
@@ -277,7 +278,7 @@ def dog_worker():
     p += tunic(b, k.cloth, flare=0.25)
     p.append(gear.front_panel(b, b.neck_z - 0.04, b.hip_h - 0.12, 0.1, k.leather, "body",
                               tip="round", inflate=1.12))
-    p += gear.belt(b, "#5a3a22", pouch="#7a4b2a")
+    p += gear.belt(b, "#5a3a22", pouch="#7a4b2a", fit=p)
     p += gear.collar(b, "#a33a2a", tag=palette.GOLD)
     p += gear.in_hand(b, gear.hammer(size=1.2), "R")
     return spec(b, p, style="tool", worker=True)
@@ -295,7 +296,7 @@ def dog_halberdier():
     p += gear.chest_emblem(b, "dogs", k.trim, inflate=1.17)
     p += plate_set(b, k, pauldron=1.15, tiers=2, breast=False, back=False, fauld_rows=0, tassets=False,
                    gorget=False)
-    p += belt(b, k)
+    p += belt(b, k, fit=p)
     p += armor.bascinet(b, k.plate, k.trim, aventail=k.mail)
     p += gear.in_hand(b, gear.halberd(), "R", scale=1.35)
     return spec(b, p, style="thrust")
@@ -310,7 +311,7 @@ def dog_archer():
     p += tunic(b, k.cloth, flare=0.3)
     p += leather_set(b, k, pauldron=0.85, side="L")
     p += gear.hood(b, TW, mat="team", open_face=0.85, mantle=True)
-    p += belt(b, k, medal=False)
+    p += belt(b, k, medal=False, fit=p)
     p += gear.backpack(b, k.leather, kind="quiver")
     p += gear.in_hand(b, gear.longbow(), "L", scale=1.3)
     return spec(b, p, style="bow")
@@ -326,7 +327,7 @@ def dog_bulldog_guard():
     p += skirt(b, drop=0.13)
     p += plate_set(b, k, pauldron=1.55, tiers=3, spikes=3, fauld_rows=2)
     p += gear.collar(b, "#3a2a20", spikes=palette.STEEL)
-    p += belt(b, k)
+    p += belt(b, k, fit=p)
     p += armor.tabard_strip(b, TW, k.trim, length=0.3, width=0.09)
     p += armor.bascinet(b, k.plate, k.trim, nasal=False, plume=TW)
     p += gear.in_hand(b, gear.mace(k.plate, size=1.7), "R", scale=1.35)
@@ -344,7 +345,7 @@ def dog_hero_rex():
     p += skirt(b, drop=0.15, flare=0.25)
     p += plate_set(b, k, pauldron=1.6, tiers=3, spikes=0, gorget=False)
     p += gear.cape(b, TW, collar="#f2e6cc", length=(b.shoulder_z + 0.02 - short_cape(b)) if short_cape(b) else None)
-    p += belt(b, k)
+    p += belt(b, k, fit=p)
     p += armor.tabard_strip(b, TW, k.trim, length=0.36, width=0.09)
     p += gear.crown(b, gold=k.trim, points=5, h=0.085, r_scale=0.7)
     p += gear.in_hand(b, gear.sword(0.7, 0.11, guard=k.trim), "R")
@@ -364,7 +365,7 @@ def ham_worker():
     p += tunic(b, "#d9b26f", flare=0.2, z_bot=b.hip_h - 0.06)
     p += gear.bandana(b, TW)
     p += gear.backpack(b, "#d8c08a", kind="sack", size=1.3)
-    p += gear.belt(b, palette.LEATHER)
+    p += gear.belt(b, palette.LEATHER, fit=p)
     p += gear.in_hand(b, gear.pickaxe(), "R", scale=1.2)
     return spec(b, p, style="tool", worker=True)
 
@@ -382,7 +383,7 @@ def ham_militia():
     p += gear.chest_emblem(b, "hamsters", k.trim, inflate=1.14)
     for s in ("L", "R"):
         p += armor.pauldron(b, s, k.leather, k.trim, size=1.0, tiers=2, team=None, mat="body")
-    p += belt(b, k, medal=False)
+    p += belt(b, k, medal=False, fit=p)
     p += armor.chapel(b, k.plate, k.trim, brim=1.35)
     p += gear.in_hand(b, gear.pitchfork(), "R", scale=1.3)
     p += mount_shield(b, gear.pot_lid(), 0.08)
@@ -397,7 +398,7 @@ def ham_slinger():
     p += tunic(b, TW, mat="team", flare=0.2, z_bot=b.hip_h - 0.06, trim=k.trim, trim_mat="gold")
     p += leather_set(b, k, pauldron=0.8, side="R")
     p += gear.bandana(b, "#efe6cf", mat="cloth")
-    p += gear.belt(b, k.leather, buckle=k.trim, pouch="#e9d6a0")
+    p += gear.belt(b, k.leather, buckle=k.trim, pouch="#e9d6a0", fit=p)
     p += gear.in_hand(b, gear.sling(), "R", scale=1.3)
     return spec(b, p, style="sling")
 
@@ -452,7 +453,7 @@ def ham_hero_puhloshek():
                               inflate=1.1, depth=0.008))
     for s in ("L", "R"):
         p += armor.pauldron(b, s, k.plate, k.trim, size=1.2, tiers=2, team=TW)
-    p += gear.belt(b, "#6b3a1e", buckle=k.trim, pouch=k.trim)
+    p += gear.belt(b, "#6b3a1e", buckle=k.trim, pouch=k.trim, fit=p)
     z = b.neck_z - 0.04
     rx, ry = beast.torso_r(b, z)
     ch = geo.tube(geo.bezier((-rx * 0.8, -ry * 0.4, z + 0.02), (0, -ry * 1.5, z - 0.14),
@@ -480,7 +481,7 @@ def hare_worker():
     p += tunic(b, "#efe9dc", flare=0.2)
     p.append(gear.front_panel(b, b.neck_z - 0.06, b.hip_h - 0.12, 0.11, "#5a7fa8", "cloth",
                               tip="straight", inflate=1.12))
-    p += gear.belt(b, palette.LEATHER)
+    p += gear.belt(b, palette.LEATHER, fit=p)
     p += gear.straw_hat(b, band_c=palette.FACTIONS["hares"]["team"])
     p += gear.in_hand(b, gear.hoe(), "R", scale=1.2)
     return spec(b, p, style="tool", worker=True)
@@ -494,7 +495,7 @@ def hare_spearman():
     p.append(gear.garment(b, b.hip_h - 0.2, b.neck_z - 0.01, TW, "team", inflate=1.06, flare=0.35))
     p += plate_set(b, k, pauldron=1.05, tiers=2, team_pauldron=False, legs=False, fauld_rows=0,
                    tassets=False, gorget=False)
-    p += belt(b, k, medal=False)
+    p += belt(b, k, medal=False, fit=p)
     p += armor.shishak(b, k.plate, k.trim)
     p += gear.in_hand(b, gear.spear(tassel=TW), "R", scale=1.35)
     p += mount_shield(b, gear.shield_kite(TW, k.trim, gear.emblem("hares", k.trim, 1.3)), 0.12)
@@ -508,7 +509,7 @@ def hare_archer():
     p = beast.fur_body(b, sleeve=TW, boots="#7a2a1e", paw=k.leather)
     p += tunic(b, TW, mat="team", flare=0.3, trim=k.trim, trim_mat="gold")
     p += leather_set(b, k, pauldron=0.8, side="L")
-    p += belt(b, k, medal=False)
+    p += belt(b, k, medal=False, fit=p)
     p += gear.fur_hat(b, TW)
     p += gear.backpack(b, "#7a2a1e", kind="quiver")
     p += gear.in_hand(b, gear.longbow(wood="#c9a26a", recurve=True, length=0.85), "L", scale=1.3)
@@ -523,7 +524,7 @@ def hare_vityaz():
     p += skirt(b, drop=0.14, flare=0.25)
     p += plate_set(b, k, pauldron=1.4, tiers=3, gorget=False)
     p += gear.cape(b, TW, collar=k.trim, length=(b.shoulder_z + 0.02 - short_cape(b)) if short_cape(b) else None)
-    p += belt(b, k)
+    p += belt(b, k, fit=p)
     p += armor.tabard_strip(b, TW, k.trim, length=0.32)
     p += armor.shishak(b, k.trim, k.plate, plume=TW)
     p += gear.in_hand(b, gear.sword(0.62, 0.1, guard=k.trim), "R")
@@ -567,7 +568,7 @@ def rat_raider():
     p += armor.vambrace(b, "R", k.leather, k.trim, mat="body")
     p += armor.pot_helm(b, k.plate, k.trim)
     p += gear.scarf(b, TW)
-    p += gear.belt(b, k.leather, buckle=k.trim)
+    p += gear.belt(b, k.leather, buckle=k.trim, fit=p)
     p += gear.in_hand(b, gear.cleaver(), "R", scale=1.5)
     return spec(b, p, style="sword", posture=16)
 
@@ -579,7 +580,7 @@ def rat_plague_doctor():
     coat = "#3a3530"
     p = beast.fur_body(b, sleeve=coat, paw="#2a2420")
     p.append(gear.garment(b, 0.04, b.neck_z - 0.01, coat, "cloth", inflate=1.06, flare=0.45))
-    p += gear.belt(b, "#2a2420", buckle=k.trim, pouch="#5a4a32")
+    p += gear.belt(b, "#2a2420", buckle=k.trim, pouch="#5a4a32", fit=p)
     for s in ("L", "R"):
         p += armor.pauldron(b, s, k.leather, k.trim, size=0.9, tiers=2, team=None, mat="body")
     p += gear.beak_mask(b)

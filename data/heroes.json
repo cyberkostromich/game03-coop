@@ -1,0 +1,1381 @@
+{
+ "murena": {
+  "faction": "cats",
+  "name": "Герцогиня Мурена Когтистая",
+  "role": "leader",
+  "model": "cat_hero_murena",
+  "hp": 700,
+  "mana": 240,
+  "armor": 3,
+  "armor_type": "hero",
+  "damage": [
+   26,
+   32
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 3.4,
+  "primary": "str",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Взмах когтей",
+    "type": "target_unit",
+    "cooldown": 7,
+    "mana": 60,
+    "range": 1.6,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "damage",
+      "amount": [
+       70,
+       120,
+       170
+      ]
+     },
+     {
+      "kind": "dot",
+      "dps": [
+       10,
+       16,
+       22
+      ],
+      "duration": 5
+     }
+    ],
+    "desc": "Удар когтями: урон и кровотечение 5 с",
+    "vfx": "claw"
+   },
+   {
+    "key": "W",
+    "name": "Царственное презрение",
+    "type": "aura",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 7,
+    "effects": [
+     {
+      "kind": "aura",
+      "stat": "attack_speed",
+      "value": [
+       -0.08,
+       -0.12,
+       -0.15
+      ],
+      "target": "enemies"
+     }
+    ],
+    "desc": "Враги рядом −15% скорости атаки",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Девять жизней",
+    "type": "passive",
+    "cooldown": 180,
+    "mana": 0,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "revive",
+      "hp": 0.3
+     }
+    ],
+    "desc": "Раз в 3 мин воскресает с 30% HP",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Ночь длинных когтей",
+    "type": "no_target",
+    "cooldown": 120,
+    "mana": 175,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "invisible",
+      "scope": "army",
+      "duration": 15,
+      "first_strike": 2.0
+     }
+    ],
+    "desc": "15 с вся армия котов невидима, первый удар ×2",
+    "vfx": "night"
+   }
+  ]
+ },
+ "barsik": {
+  "faction": "cats",
+  "name": "Сэр Барсик Шпагин",
+  "role": "duelist",
+  "model": "cat_hero_murena",
+  "hp": 620,
+  "mana": 200,
+  "armor": 2,
+  "armor_type": "hero",
+  "damage": [
+   28,
+   34
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 3.6,
+  "primary": "agi",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Выпад",
+    "type": "target_unit",
+    "cooldown": 6,
+    "mana": 50,
+    "range": 6,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "dash"
+     },
+     {
+      "kind": "damage",
+      "amount": [
+       60,
+       110,
+       160
+      ]
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Парирование",
+    "type": "no_target",
+    "cooldown": 12,
+    "mana": 60,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "reflect_melee",
+      "duration": 2
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Прыжок на стену",
+    "type": "point",
+    "cooldown": 14,
+    "mana": 50,
+    "range": 8,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "leap",
+      "over_walls": true
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Дуэль",
+    "type": "target_unit",
+    "cooldown": 90,
+    "mana": 150,
+    "range": 3,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "duel",
+      "duration": 10
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "valeriana": {
+  "faction": "cats",
+  "name": "Мать Валерьяна",
+  "role": "support",
+  "model": "cat_hero_murena",
+  "hp": 540,
+  "mana": 320,
+  "armor": 1,
+  "armor_type": "hero",
+  "damage": [
+   18,
+   24
+  ],
+  "attack_type": "hero",
+  "range": 6.0,
+  "cooldown": 1.5,
+  "speed": 3.2,
+  "primary": "int",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Мурчание",
+    "type": "channel",
+    "cooldown": 10,
+    "mana": 80,
+    "range": 0,
+    "radius": 5,
+    "effects": [
+     {
+      "kind": "heal_area",
+      "hps": [
+       20,
+       32,
+       44
+      ],
+      "duration": 5
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Валериановый настой",
+    "type": "point",
+    "cooldown": 18,
+    "mana": 75,
+    "range": 0,
+    "radius": 4,
+    "effects": [
+     {
+      "kind": "buff",
+      "stat": "attack_speed",
+      "value": [
+       0.2,
+       0.3,
+       0.4
+      ],
+      "duration": 8
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Чёрная кошка",
+    "type": "point",
+    "cooldown": 20,
+    "mana": 90,
+    "range": 0,
+    "radius": 4,
+    "effects": [
+     {
+      "kind": "miss_zone",
+      "value": 0.3,
+      "duration": 10
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Клубок",
+    "type": "point",
+    "cooldown": 100,
+    "mana": 175,
+    "range": 0,
+    "radius": 6,
+    "effects": [
+     {
+      "kind": "root_area",
+      "duration": 5
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "rex": {
+  "faction": "dogs",
+  "name": "Король Рекс Верный",
+  "role": "leader",
+  "model": "dog_hero_rex",
+  "hp": 820,
+  "mana": 200,
+  "armor": 4,
+  "armor_type": "hero",
+  "damage": [
+   24,
+   30
+  ],
+  "attack_type": "hero",
+  "range": 1.4,
+  "cooldown": 1.5,
+  "speed": 3.1,
+  "primary": "str",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Командный лай",
+    "type": "point",
+    "cooldown": 9,
+    "mana": 70,
+    "range": 5,
+    "radius": 4,
+    "effects": [
+     {
+      "kind": "stun_cone",
+      "duration": [
+       1.0,
+       1.5,
+       2.0
+      ]
+     },
+     {
+      "kind": "damage",
+      "amount": [
+       50,
+       90,
+       130
+      ]
+     }
+    ],
+    "desc": "Оглушение конусом",
+    "vfx": "bark"
+   },
+   {
+    "key": "W",
+    "name": "Вожак стаи",
+    "type": "aura",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 7,
+    "effects": [
+     {
+      "kind": "aura",
+      "stat": "pack_mult",
+      "value": [
+       1.5,
+       1.75,
+       2.0
+      ],
+      "target": "allies"
+     }
+    ],
+    "desc": "Механика Стаи ×2 рядом",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Верность",
+    "type": "target_unit",
+    "cooldown": 15,
+    "mana": 60,
+    "range": 6,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "redirect_damage",
+      "share": [
+       0.3,
+       0.45,
+       0.6
+      ],
+      "duration": 8
+     }
+    ],
+    "desc": "Забирает урон по союзному герою",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Спустить свору",
+    "type": "no_target",
+    "cooldown": 120,
+    "mana": 175,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "summon",
+      "unit": "dog_halberdier",
+      "count": 10,
+      "duration": 30
+     }
+    ],
+    "desc": "10 гончих на 30 с",
+    "vfx": "howl"
+   }
+  ]
+ },
+ "hvatych": {
+  "faction": "dogs",
+  "name": "Сэр Бульдог Хватыч",
+  "role": "tank",
+  "model": "dog_bulldog_guard",
+  "hp": 950,
+  "mana": 160,
+  "armor": 6,
+  "armor_type": "hero",
+  "damage": [
+   22,
+   26
+  ],
+  "attack_type": "hero",
+  "range": 1.2,
+  "cooldown": 1.5,
+  "speed": 2.9,
+  "primary": "str",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Мёртвая хватка",
+    "type": "target_unit",
+    "cooldown": 12,
+    "mana": 70,
+    "range": 1.5,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "hold",
+      "duration": 4
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Толстая шкура",
+    "type": "passive",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "damage_reduction",
+      "value": [
+       0.1,
+       0.15,
+       0.2
+      ]
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Рычание",
+    "type": "no_target",
+    "cooldown": 14,
+    "mana": 50,
+    "range": 0,
+    "radius": 5,
+    "effects": [
+     {
+      "kind": "taunt",
+      "duration": 3
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Неудержимый",
+    "type": "no_target",
+    "cooldown": 100,
+    "mana": 150,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "buff",
+      "stat": "damage",
+      "value": 0.5,
+      "duration": 12,
+      "cc_immune": true
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "bigl": {
+  "faction": "dogs",
+  "name": "Нюхач Бигль",
+  "role": "scout",
+  "model": "dog_archer",
+  "hp": 580,
+  "mana": 220,
+  "armor": 2,
+  "armor_type": "hero",
+  "damage": [
+   20,
+   26
+  ],
+  "attack_type": "hero",
+  "range": 7.0,
+  "cooldown": 1.5,
+  "speed": 3.5,
+  "primary": "agi",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Взять след",
+    "type": "no_target",
+    "cooldown": 15,
+    "mana": 50,
+    "range": 0,
+    "radius": 14,
+    "effects": [
+     {
+      "kind": "reveal",
+      "duration": 10
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Апорт",
+    "type": "target_unit",
+    "cooldown": 9,
+    "mana": 60,
+    "range": 8,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "projectile_bounce",
+      "targets": 2,
+      "stun": 1.0
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Метка территории",
+    "type": "point",
+    "cooldown": 20,
+    "mana": 40,
+    "range": 4,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "ward",
+      "duration": 120
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Вой на луну",
+    "type": "no_target",
+    "cooldown": 120,
+    "mana": 150,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "buff",
+      "stat": "damage",
+      "value": 0.3,
+      "night_only": true,
+      "fear": 3
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "puhloshek": {
+  "faction": "hamsters",
+  "name": "Магистр Пухлощёк",
+  "role": "leader",
+  "model": "ham_hero_puhloshek",
+  "hp": 640,
+  "mana": 280,
+  "armor": 2,
+  "armor_type": "hero",
+  "damage": [
+   20,
+   26
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 2.9,
+  "primary": "int",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Защёчный запас",
+    "type": "no_target",
+    "cooldown": 25,
+    "mana": 40,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "grant_gold",
+      "amount": [
+       50,
+       75,
+       100
+      ]
+     }
+    ],
+    "desc": "Достаёт из щёк золото",
+    "vfx": "coins"
+   },
+   {
+    "key": "W",
+    "name": "Купеческая гильдия",
+    "type": "aura",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 9,
+    "effects": [
+     {
+      "kind": "aura",
+      "stat": "gather_rate",
+      "value": [
+       0.1,
+       0.15,
+       0.2
+      ],
+      "target": "workers"
+     }
+    ],
+    "desc": "Рабочие +20% добычи",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Подкуп семечками",
+    "type": "target_unit",
+    "cooldown": 60,
+    "mana": 120,
+    "range": 6,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "convert_neutral"
+     }
+    ],
+    "desc": "Перекупает нейтрала",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Великая заначка",
+    "type": "no_target",
+    "cooldown": 150,
+    "mana": 200,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "team_resources",
+      "gold": 300,
+      "wood": 150
+     }
+    ],
+    "desc": "Вся команда получает ресурсы",
+    "vfx": "coins"
+   }
+  ]
+ },
+ "kolesov": {
+  "faction": "hamsters",
+  "name": "Инженер Колесов",
+  "role": "siege",
+  "model": "ham_barrel",
+  "hp": 700,
+  "mana": 220,
+  "armor": 3,
+  "armor_type": "hero",
+  "damage": [
+   24,
+   30
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 2.7,
+  "primary": "str",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Колесо-таран",
+    "type": "point",
+    "cooldown": 10,
+    "mana": 70,
+    "range": 10,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "line_damage",
+      "amount": [
+       80,
+       130,
+       180
+      ]
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Подкоп",
+    "type": "target_unit",
+    "cooldown": 16,
+    "mana": 80,
+    "range": 1.5,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "damage",
+      "amount": [
+       150,
+       250,
+       350
+      ],
+      "vs_buildings": 3
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Механический хомяк",
+    "type": "point",
+    "cooldown": 25,
+    "mana": 100,
+    "range": 4,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "turret",
+      "duration": 40
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Великое Колесо",
+    "type": "point",
+    "cooldown": 140,
+    "mana": 200,
+    "range": 60,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "line_damage",
+      "amount": 500,
+      "length": 60
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "vatrushkin": {
+  "faction": "hamsters",
+  "name": "Генерал Ватрушкин",
+  "role": "mass",
+  "model": "ham_militia",
+  "hp": 760,
+  "mana": 200,
+  "armor": 3,
+  "armor_type": "hero",
+  "damage": [
+   20,
+   26
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 2.8,
+  "primary": "str",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "В кучу!",
+    "type": "no_target",
+    "cooldown": 15,
+    "mana": 60,
+    "range": 0,
+    "radius": 6,
+    "effects": [
+     {
+      "kind": "buff",
+      "stat": "armor",
+      "value": [
+       3,
+       5,
+       7
+      ],
+      "duration": 10,
+      "slow": 0.2
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Ополчение",
+    "type": "no_target",
+    "cooldown": 30,
+    "mana": 100,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "summon",
+      "unit": "ham_militia",
+      "count": 4,
+      "duration": 45
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Спячка",
+    "type": "target_unit",
+    "cooldown": 25,
+    "mana": 75,
+    "range": 6,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "invulnerable_heal",
+      "duration": 5,
+      "hps": 40
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Хомячий вал",
+    "type": "no_target",
+    "cooldown": 160,
+    "mana": 200,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "summon",
+      "unit": "ham_militia",
+      "count": 30,
+      "duration": 20
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "belyana": {
+  "faction": "hares",
+  "name": "Княгиня Беляна",
+  "role": "leader",
+  "model": "hare_hero_belyana",
+  "hp": 620,
+  "mana": 240,
+  "armor": 2,
+  "armor_type": "hero",
+  "damage": [
+   22,
+   28
+  ],
+  "attack_type": "hero",
+  "range": 1.3,
+  "cooldown": 1.5,
+  "speed": 3.9,
+  "primary": "agi",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Прыжок через строй",
+    "type": "point",
+    "cooldown": 9,
+    "mana": 65,
+    "range": 9,
+    "radius": 2.5,
+    "effects": [
+     {
+      "kind": "leap"
+     },
+     {
+      "kind": "stun_area",
+      "duration": [
+       0.8,
+       1.2,
+       1.6
+      ]
+     },
+     {
+      "kind": "damage",
+      "amount": [
+       60,
+       100,
+       140
+      ]
+     }
+    ],
+    "desc": "Прыжок с оглушением при приземлении",
+    "vfx": "leap"
+   },
+   {
+    "key": "W",
+    "name": "Весенняя аура",
+    "type": "aura",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 8,
+    "effects": [
+     {
+      "kind": "aura",
+      "stat": "move_speed",
+      "value": [
+       0.08,
+       0.12,
+       0.16
+      ],
+      "target": "allies"
+     }
+    ],
+    "desc": "+скорость передвижения союзникам",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Белая шубка",
+    "type": "passive",
+    "cooldown": 0,
+    "mana": 0,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "invisible_when",
+      "condition": "night_or_snow"
+     }
+    ],
+    "desc": "Ночью невидима вне боя",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Великий исход",
+    "type": "point",
+    "cooldown": 120,
+    "mana": 175,
+    "range": 30,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "army_leap",
+      "radius": 9
+     }
+    ],
+    "desc": "Вся армия в радиусе прыгает в точку",
+    "vfx": "exodus"
+   }
+  ]
+ },
+ "kosoy": {
+  "faction": "hares",
+  "name": "Атаман Косой",
+  "role": "archer",
+  "model": "hare_archer",
+  "hp": 560,
+  "mana": 220,
+  "armor": 1,
+  "armor_type": "hero",
+  "damage": [
+   24,
+   30
+  ],
+  "attack_type": "hero",
+  "range": 7.5,
+  "cooldown": 1.5,
+  "speed": 3.8,
+  "primary": "agi",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Петляние",
+    "type": "no_target",
+    "cooldown": 14,
+    "mana": 50,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "evasion",
+      "value": 1.0,
+      "duration": 3
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Стрела-морковка",
+    "type": "point",
+    "cooldown": 9,
+    "mana": 70,
+    "range": 12,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "line_damage",
+      "amount": [
+       90,
+       140,
+       190
+      ]
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Ложный след",
+    "type": "no_target",
+    "cooldown": 25,
+    "mana": 100,
+    "range": 0,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "illusions",
+      "count": 3,
+      "duration": 10
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Заячий дождь",
+    "type": "point",
+    "cooldown": 110,
+    "mana": 175,
+    "range": 12,
+    "radius": 6,
+    "effects": [
+     {
+      "kind": "rain",
+      "dps": 60,
+      "duration": 6
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ },
+ "morkovna": {
+  "faction": "hares",
+  "name": "Матушка Морковна",
+  "role": "support",
+  "model": "hare_worker",
+  "hp": 540,
+  "mana": 300,
+  "armor": 1,
+  "armor_type": "hero",
+  "damage": [
+   16,
+   22
+  ],
+  "attack_type": "hero",
+  "range": 6.0,
+  "cooldown": 1.5,
+  "speed": 3.4,
+  "primary": "int",
+  "per_level": {
+   "hp": 60,
+   "mana": 25,
+   "damage": 3,
+   "armor": 0.4
+  },
+  "max_level": 10,
+  "ult_level": 6,
+  "cost": {
+   "gold": 425,
+   "wood": 100,
+   "food": 0
+  },
+  "pop": 5,
+  "abilities": [
+   {
+    "key": "Q",
+    "name": "Проращивание",
+    "type": "point",
+    "cooldown": 12,
+    "mana": 60,
+    "range": 7,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "barrier",
+      "duration": 15
+     },
+     {
+      "kind": "grant_food",
+      "amount": 10
+     }
+    ],
+    "desc": "",
+    "vfx": "q"
+   },
+   {
+    "key": "W",
+    "name": "Нора",
+    "type": "point",
+    "cooldown": 30,
+    "mana": 120,
+    "range": 40,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "teleport_squad",
+      "radius": 4
+     }
+    ],
+    "desc": "",
+    "vfx": "w"
+   },
+   {
+    "key": "E",
+    "name": "Урожай",
+    "type": "target_building",
+    "cooldown": 40,
+    "mana": 90,
+    "range": 8,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "train_speed",
+      "value": 0.5,
+      "duration": 30
+     }
+    ],
+    "desc": "",
+    "vfx": "e"
+   },
+   {
+    "key": "R",
+    "name": "Нашествие",
+    "type": "point",
+    "cooldown": 140,
+    "mana": 200,
+    "range": 10,
+    "radius": 0,
+    "effects": [
+     {
+      "kind": "summon_waves",
+      "unit": "hare_spearman",
+      "count": 6,
+      "waves": 3
+     }
+    ],
+    "desc": "",
+    "vfx": "r"
+   }
+  ]
+ }
+}

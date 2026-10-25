@@ -226,3 +226,39 @@ def build_building(bid, out_dir, preview_dir=None):
         preview_building(ob, arm, os.path.join(preview_dir, f"{bid}.png"))
     export_glb(path, ob, arm, palette.rgb(spec.team).tolist())
     return meta
+
+
+# ---------------------------------------------------------------------------
+# Static props (trees, rocks, bridges...)
+# ---------------------------------------------------------------------------
+
+def export_static(path, ob):
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.export_scene.gltf(
+        filepath=path, export_format="GLB", use_selection=True, export_yup=True, export_animations=False,
+        export_skins=False, export_materials="EXPORT", export_vertex_color="MATERIAL",
+        export_image_format="WEBP", export_image_quality=85, export_lights=False, export_cameras=False)
+
+
+def build_prop(pid, out_dir, preview_dir=None):
+    from . import props
+    build.reset_scene()
+    parts = props.PROPS[pid]()
+    ob = build.parts_to_object(parts, pid)
+    tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+    h = max(v.co.z for v in ob.data.vertices)
+    build.bake_ao(ob, strength=0.5, distance=0.6, samples=24)
+    texture.bake_textures(ob, size=512, scale=1.6, normal=False)
+    os.makedirs(out_dir, exist_ok=True)
+    if preview_dir:
+        render.setup_render((420, 420), 24)
+        render.setup_world(0.9)
+        render.lights()
+        render.ground("#6f9a4a")
+        render.camera((0, 0, h * 0.45), max(h, 1.0) * 2.4, 25, 30, lens=50)
+        render.render(os.path.join(preview_dir, f"{pid}.png"))
+    export_static(os.path.join(out_dir, f"{pid}.glb"), ob)
+    return {"id": pid, "tris": tris, "height": round(float(h), 2), "file": f"{pid}.glb"}

@@ -1,0 +1,76 @@
+{
+ "cats": {
+  "name": "Котовое Герцогство Когтеград",
+  "hall": "cat_hall",
+  "worker": "cat_worker",
+  "heroes": [
+   "murena",
+   "barsik",
+   "valeriana"
+  ],
+  "mechanics": {
+   "night_hunt": {
+    "night_invisible_out_of_combat": true,
+    "first_strike": 2.0
+   },
+   "fish_bonus": 0.5
+  }
+ },
+ "dogs": {
+  "name": "Пёсья Марка",
+  "hall": "dog_hall",
+  "worker": "dog_worker",
+  "heroes": [
+   "rex",
+   "hvatych",
+   "bigl"
+  ],
+  "mechanics": {
+   "pack": {
+    "per_ally": 0.05,
+    "max": 0.3,
+    "radius": 5
+   },
+   "detect_invisible": true
+  }
+ },
+ "hamsters": {
+  "name": "Защёчная Республика",
+  "hall": "ham_hall",
+  "worker": "ham_worker",
+  "heroes": [
+   "puhloshek",
+   "kolesov",
+   "vatrushkin"
+  ],
+  "mechanics": {
+   "cheek_pouches": 2.0,
+   "burrows": true,
+   "hibernation_regen": 2.0
+  }
+ },
+ "hares": {
+  "name": "Длинноухое Княжество",
+  "hall": "hare_hall",
+  "worker": "hare_worker",
+  "heroes": [
+   "belyana",
+   "kosoy",
+   "morkovna"
+  ],
+  "mechanics": {
+   "leap": true,
+   "fertility": 0.4,
+   "zigzag_evasion": 2.0
+  }
+ },
+ "rats": {
+  "name": "Крысиная Чума",
+  "ai_only": true,
+  "units": [
+   "rat_raider",
+   "rat_plague_doctor",
+   "rat_king"
+  ]
+ }
+}
