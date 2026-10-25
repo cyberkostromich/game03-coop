@@ -211,9 +211,10 @@ export class Abilities {
   }
 
   incomeBonus(owner) {
-    const mill = this.w.millHolder;
-    return mill === 0 ? (this.w.D.buildings.mill?.aura?.income || 0) : 0;
+    const P = this.w.players[owner];
+    return P && this.w.millHolder === P.team ? (this.w.D.buildings.mill?.aura?.income || 0) : 0;
   }
+
 
   trainBonus(b) {
     let s = 0;
@@ -268,7 +269,7 @@ export class Abilities {
       u.packN = n;
     }
     if (d.pack) m.dmg += Math.min(0.3 * packMult, (u.packN || 0) * d.pack * packMult);
-    if (w.crusade.until > w.tick && u.team === 0) { m.dmg += 0.3; m.speed += 0.3; }
+    if (w.crusade.until > w.tick && u.team < 100) { m.dmg += 0.3; m.speed += 0.3; }
     if (u.items) for (const it of u.items) {
       const st = it && w.D.items.items[it.type]?.stats;
       if (!st) continue;
@@ -341,11 +342,12 @@ export class Abilities {
     const w = this.w;
     const mill = w.blds.find(e => e.type === 'mill');
     if (!mill) return;
-    let ours = 0, theirs = 0;
-    w.query(mill.x, mill.y, 7, u => { if (u.team === 0) ours++; else if (u.team === 1) theirs++; });
+    // the mill belongs to the only side standing on the island
+    const present = new Set();
+    w.query(mill.x, mill.y, 7, u => { if (u.team !== 101) present.add(u.team); });
     const prev = w.millHolder;
-    if (ours && !theirs) w.millHolder = 0; else if (theirs && !ours) w.millHolder = 1;
-    if (prev !== w.millHolder && w.millHolder === 0) w.msg(-1, 'Старая мельница под нашим контролем: +10% золота', 'ally');
+    if (present.size === 1) w.millHolder = [...present][0];
+    if (prev !== w.millHolder && w.millHolder < 100) for (const P of w.players) if (P.team === w.millHolder) w.msg(P.id, 'Старая мельница под нашим контролем: +10% золота', 'ally');
     const regen = mill.def.aura?.regen || 0;
     if (regen) w.query(mill.x, mill.y, 7, u => { if (u.team === w.millHolder) u.hp = Math.min(u.maxHp, u.hp + regen * 0.5); });
   }

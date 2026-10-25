@@ -29,10 +29,10 @@ export class Hud {
     const H = this.root;
     H.innerHTML = `
       <div id="top" class="frame panel">
-        <div class="res gold"><i></i><span>0</span></div>
-        <div class="res wood"><i></i><span>0</span></div>
-        <div class="res food"><i></i><span>0</span></div>
-        <div class="res pop"><i></i><span>0/0</span></div>
+        <div class="res gold" title="Золото"><i><svg viewBox="0 0 32 32"><g stroke="#3a2004" stroke-width="1.6"><ellipse cx="16" cy="24" rx="11" ry="4.5" fill="#b8801c"/><rect x="5" y="17" width="22" height="7" fill="#d9a22e" stroke="none"/><ellipse cx="16" cy="17" rx="11" ry="4.5" fill="#f2c94c"/><ellipse cx="16" cy="12" rx="9" ry="3.6" fill="#ffe08a"/><ellipse cx="16" cy="8" rx="7" ry="2.8" fill="#fff3c4"/></g><path d="M12 8h4" stroke="#b8801c" stroke-width="1.2"/></svg></i><span>0</span></div>
+        <div class="res wood" title="Дерево"><i><svg viewBox="0 0 32 32"><g stroke="#2a170a" stroke-width="1.6"><rect x="4" y="16" width="22" height="9" rx="4.5" fill="#8a5a2c"/><ellipse cx="24" cy="20.5" rx="3.6" ry="4.5" fill="#e3c08a"/><rect x="7" y="7" width="21" height="9" rx="4.5" fill="#a06a36"/><ellipse cx="26" cy="11.5" rx="3.6" ry="4.5" fill="#f0d29c"/></g><circle cx="26" cy="11.5" r="1.4" fill="none" stroke="#a06a36"/><circle cx="24" cy="20.5" r="1.4" fill="none" stroke="#8a5a2c"/></svg></i><span>0</span></div>
+        <div class="res food" title="Еда"><i><svg viewBox="0 0 32 32"><g stroke="#3a1a04" stroke-width="1.6"><path d="M6 27 L18 11 Q23 7 26 11 Q28 15 22 19 Z" fill="#f08a2c"/><path d="M20 10 Q19 4 23 3 M22 10 Q25 5 29 6 M23 12 Q28 11 29 14" fill="none" stroke="#3f8f2a" stroke-width="2.4"/></g><path d="M11 21 l3 1 M14 17 l3 1 M17 14 l2.5 1" stroke="#b8561a" stroke-width="1.3"/></svg></i><span>0</span></div>
+        <div class="res pop" title="Население"><i><svg viewBox="0 0 32 32"><g fill="#cfe0ff" stroke="#1a2a5a" stroke-width="1.6"><ellipse cx="16" cy="21" rx="7.5" ry="6.5"/><ellipse cx="7" cy="13" rx="3" ry="3.8"/><ellipse cx="12.5" cy="7.5" rx="3" ry="3.8"/><ellipse cx="19.5" cy="7.5" rx="3" ry="3.8"/><ellipse cx="25" cy="13" rx="3" ry="3.8"/></g></svg></i><span>0/0</span></div>
         <div class="upkeep">Без содержания</div>
         <div id="clock" title="День и ночь"><div class="dial"></div><div class="cover"></div></div>
         <div id="wave"><div class="t">—</div><div class="l">до волны крыс</div></div>
@@ -95,8 +95,12 @@ export class Hud {
     this.$.upkeep.textContent = up >= 1 ? 'Без содержания' : up >= 0.7 ? 'Малое содержание' : 'Большое содержание';
     this.$.upkeep.className = 'upkeep' + (up >= 1 ? '' : up >= 0.7 ? ' mid' : ' high');
     this.$.dial.style.transform = `rotate(${-w.dayPhase * 360 + 90}deg)`;
-    const s = w.director.secondsToNext;
-    if (s < 0) { this.$.wave.textContent = w.result ? '—' : 'Последняя'; this.$.waveL.textContent = 'волна вышла'; }
+    const s = w.ratsOn ? w.director.secondsToNext : -2;
+    if (s === -2) {
+      const t = Math.floor(w.time);
+      this.$.wave.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+      this.$.waveL.textContent = `схватка · команд в игре: ${w.teams().length}`;
+    } else if (s < 0) { this.$.wave.textContent = w.result ? '—' : 'Последняя'; this.$.waveL.textContent = 'волна вышла'; }
     else { this.$.wave.textContent = `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; this.$.waveL.textContent = `до волны ${w.director.n + 1} из ${w.director.total}`; }
     this.updateAllies();
     this.updateInfo();
@@ -106,14 +110,19 @@ export class Hud {
 
   updateAllies() {
     const w = this.w;
-    const html = w.players.map(p => {
+    const myTeam = this.app.myTeam;
+    const order = [...w.players].sort((a, b) => (a.team !== myTeam) - (b.team !== myTeam));
+    let shownEnemies = false;
+    const html = order.map(p => {
       const heroes = p.heroes.map(id => w.byId.get(id)).filter(Boolean)
         .map(h => `<span title="${h.def.name}"><b style="width:${(h.hp / h.maxHp * 100).toFixed(0)}%"></b></span>`).join('');
       const F = this.app.D.factions[p.faction];
-      return `<div class="ally ${p.alive ? '' : 'dead'}"><div class="c" style="background:${p.color}"></div>
-        <div class="n">${p.name}${p.id === this.app.me ? ' (вы)' : ''}<small>${F.name}</small></div>
-        ${p.id !== this.app.me && p.alive ? `<button class="tbtn click" data-tr="${p.id}" title="Передать 100 золота и 50 дерева (налог 10%)">⇄</button>` : '<span></span>'}
-        <div class="heroes">${heroes}</div></div>`;
+      const enemy = p.team !== myTeam;
+      const head = enemy && !shownEnemies ? (shownEnemies = true, '<div class="sub" style="color:#ff8a6a;font-size:calc(var(--s)*14)">Противники</div>') : '';
+      return `${head}<div class="ally ${p.alive ? '' : 'dead'}"><div class="c" style="background:${p.color}"></div>
+        <div class="n">${p.name}${p.id === this.app.me ? ' (вы)' : ''}${p.alive ? '' : ' — выбыл'}<small>${F.name}</small></div>
+        ${p.id !== this.app.me && p.alive && !enemy ? `<button class="tbtn click" data-tr="${p.id}" title="Передать 100 золота и 50 дерева (налог 10%)">⇄</button>` : '<span></span>'}
+        <div class="heroes">${enemy ? '' : heroes}</div></div>`;
     }).join('') + (w.crusade.ready && !w.crusade.used ? `<button class="tbtn click" data-crusade="1">⚔ Крестовый поход</button>` : '');
     if (html !== this._alliesHtml) {
       this._alliesHtml = html;
@@ -199,6 +208,12 @@ export class Hud {
   idleInfo() {
     const P = this.me, w = this.w;
     const F = this.app.D.factions[P.faction];
+    if (w.mode === 'melee') {
+      const alive = w.players.filter(p => p.alive && p.team !== P.team).length;
+      return `<div class="name">${F.name}</div><div class="sub">Схватка${w.ratsOn ? ' · Крысиная Чума тоже атакует' : ''} · ${this.app.diffName}</div>
+        <div class="stats"><div class="st">Добыто золота: ${Math.floor(P.mined)}</div><div class="st">Противников осталось: ${alive}</div></div>
+        <div class="sub" style="margin-top:8px">Победит команда, у которой останутся здания</div>`;
+    }
     return `<div class="name">${F.name}</div><div class="sub">Оборона Королевства · ${this.app.diffName}</div>
       <div class="stats"><div class="st">Добыто золота: ${Math.floor(P.mined)}</div><div class="st">Казна команды: ${Math.floor(w.players.reduce((s, p) => s + p.mined, 0))} / ${this.app.D.economy.royal_treasury_goal}</div></div>
       <div class="sub" style="margin-top:8px">Провалы крыс: ${w.blds.filter(b => b.alive && b.type === 'rat_pit').length} · Волна ${w.director.n} из ${w.director.total}</div>`;

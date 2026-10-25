@@ -92,7 +92,7 @@ export class Minimap {
     for (const e of w.blds) {
       if (!e.alive) continue;
       const i = w.grid.idx(e.x, e.y);
-      if (e.team !== 0 && !(i >= 0 && w.explored[i])) continue;
+      if (e.team !== app.myTeam && !(i >= 0 && w.explored[i])) continue;
       const [px, py] = this.px(e.x, e.y);
       const sz = Math.max(5, e.w / (w.grid.size) * S * 1.4);
       g.fillStyle = e.type === 'gold_mine' ? '#ffd84a' : e.type === 'mill' ? '#e0e0e0' : app.views.colorOf(e);
@@ -103,7 +103,7 @@ export class Minimap {
     const sel = new Set(app.sel);
     for (const e of w.units) {
       if (!e.alive || e.hidden) continue;
-      if (e.team !== 0 && !w.visibleTo(0, e)) continue;
+      if (e.team !== app.myTeam && !w.visibleTo(app.myTeam, e)) continue;
       const [px, py] = this.px(e.x, e.y);
       const r = e.def.hero ? 3.2 : e.def.boss ? 4.5 : 2;
       g.fillStyle = sel.has(e.id) ? '#ffffff' : e.owner === 5 ? '#c8c8c8' : app.views.colorOf(e);

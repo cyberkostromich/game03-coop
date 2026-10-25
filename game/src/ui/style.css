@@ -36,11 +36,8 @@ canvas#overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointe
 #top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: calc(var(--s) * 26);
   padding: calc(var(--s) * 6) calc(var(--s) * 34) calc(var(--s) * 8); clip-path: polygon(0 0, 100% 0, 97% 100%, 3% 100%); }
 #top .res { display: flex; align-items: center; gap: calc(var(--s) * 8); font: 700 calc(var(--s) * 22) var(--font); min-width: calc(var(--s) * 92); text-shadow: 0 2px 2px #000; }
-#top .res i { width: calc(var(--s) * 26); height: calc(var(--s) * 26); display: inline-block; border-radius: 50%; box-shadow: inset 0 -3px 4px rgba(0,0,0,.5), 0 0 0 2px #1a0f05; }
-#top .res.gold i { background: radial-gradient(circle at 35% 30%, #fff3b0, #e4b030 50%, #7a4c08); }
-#top .res.wood i { background: radial-gradient(circle at 35% 30%, #e8c08a, #8a5a2c 55%, #3a2410); border-radius: 30%; }
-#top .res.food i { background: radial-gradient(circle at 35% 30%, #ffd3a0, #e07a2c 55%, #6a2a08); border-radius: 40% 40% 50% 50%; }
-#top .res.pop i { background: radial-gradient(circle at 35% 30%, #d8e8ff, #6a8ad0 55%, #1a2a5a); }
+#top .res i { width: calc(var(--s) * 30); height: calc(var(--s) * 30); display: inline-block; filter: drop-shadow(0 2px 2px rgba(0,0,0,.7)); }
+#top .res i svg { width: 100%; height: 100%; display: block; }
 #top .upkeep { font: 600 calc(var(--s) * 15) var(--font); color: var(--ink-dim); padding: 0 calc(var(--s) * 6); border-left: 1px solid rgba(227,191,106,.3); }
 #top .upkeep.mid { color: #f1c94a; } #top .upkeep.high { color: #ff6a50; }
 #clock { width: calc(var(--s) * 54); height: calc(var(--s) * 54); border-radius: 50%; position: relative; overflow: hidden;

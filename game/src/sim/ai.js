@@ -72,7 +72,7 @@ export class RatDirector {
       for (const id of g.units) { const u = w.byId.get(id); cx += u.x; cy += u.y; }
       cx /= g.units.length; cy /= g.units.length;
       let t = null, bd = Infinity;
-      for (const b of w.blds) if (b.alive && b.team === 0) { const d = (b.x - cx) ** 2 + (b.y - cy) ** 2; if (d < bd) { bd = d; t = b; } }
+      for (const b of w.blds) if (b.alive && b.team < 100) { const d = (b.x - cx) ** 2 + (b.y - cy) ** 2; if (d < bd) { bd = d; t = b; } }
       if (!t) continue;
       if (!force && g.target === t.id) {
         // idle stragglers rejoin the march

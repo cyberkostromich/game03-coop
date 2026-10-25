@@ -181,9 +181,10 @@ export class EntityViews {
       v.root.rotation.y = yaw(f);
       // visibility: fog hides enemies, mines hide workers
       let vis = !e.hidden;
-      if (vis && e.team !== 0 && e.kind === 'unit') vis = w.visibleTo(0, e) || !e.alive && v.seen;
-      if (vis && e.kind === 'unit' && e.team !== 0) v.seen = true;
-      if (e.kind === 'building' && e.team !== 0 && !v.revealed) { const i = g.idx(e.x, e.y); v.revealed = i >= 0 && w.explored[i]; vis = v.revealed; }
+      const mine = e.team === this.app.myTeam;
+      if (vis && !mine && e.kind === 'unit') vis = w.visibleTo(this.app.myTeam, e) || !e.alive && v.seen;
+      if (vis && e.kind === 'unit' && !mine) v.seen = true;
+      if (e.kind === 'building' && !mine && !v.revealed) { const i = g.idx(e.x, e.y); v.revealed = i >= 0 && w.explored[i]; vis = v.revealed; }
       if (vis) {
         sp.center.set(x, h + (v.height || 2) * 0.5, -y);
         sp.radius = (v.height || 2) * 0.7 + (e.w || 0) * 0.6 + 1;

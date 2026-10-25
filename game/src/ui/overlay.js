@@ -61,7 +61,7 @@ export class Overlay {
         g.fillStyle = '#e8b040'; g.fillRect(x, y + H + 2, W * e.built, H * 0.7);
       }
       // team strip so allied units are told apart
-      if (e.team === 0 && e.owner !== app.me) { g.fillStyle = app.views.colorOf(e); g.fillRect(x - 4, y - 1, 3, H + 2); }
+      if (e.team === app.myTeam && e.owner !== app.me) { g.fillStyle = app.views.colorOf(e); g.fillRect(x - 4, y - 1, 3, H + 2); }
     }
     // floating text
     this.texts = this.texts.filter(t => {
