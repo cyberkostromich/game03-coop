@@ -20,7 +20,8 @@ function screen(id, html) {
 export function showMenu(app, onStart) {
   const D = app.D;
   const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
-  const st = { faction: get('ak.faction', 'cats'), allies: +get('ak.allies', 1), diff: get('ak.diff', 'normal'), name: get('ak.name', 'Игрок') };
+  const st = { faction: get('ak.faction', 'cats'), allies: +get('ak.allies', 1), diff: get('ak.diff', 'normal'), name: get('ak.name', 'Игрок'),
+    mode: get('ak.mode', 'coop'), foes: +get('ak.foes', 2), rats: get('ak.rats', '0') === '1' };
   app.menuState = st;
   const netOff = document.querySelector('meta[name="ak-net"]')?.content === 'off';
   const rtc = !netOff && (typeof RTCPeerConnection !== 'undefined' || new URLSearchParams(location.search).has('local'));
@@ -28,17 +29,24 @@ export function showMenu(app, onStart) {
     <div class="card frame">
       <div class="gem" style="left:-9px;top:-9px"></div><div class="gem" style="right:-9px;top:-9px"></div>
       <h1>Звериные королевства</h1>
-      <p class="sub">Оборона Королевства · карта «${D.map.name}» · до 4 игроков против Крысиной Чумы</p>
+      <p class="sub">Карта «${D.map.name}» · до 4 игроков</p>
+      <h2>Режим</h2>
+      <div class="row" id="modeRow">${[['coop', 'Оборона Королевства', 'вместе против Крысиной Чумы'], ['ffa', 'Схватка', 'каждый сам за себя'], ['teams', 'Схватка 2 × 2', 'вы и союзник против двух королевств']]
+        .map(([k, n, t]) => `<div class="opt" data-m="${k}" title="${t}">${n}<br><small style="color:var(--ink-dim)">${t}</small></div>`).join('')}</div>
       <h2>Ваше королевство</h2>
       <div class="facs">${Object.entries(FAC).map(([k, f]) => `
         <div class="fac ${k === st.faction ? 'on' : ''}" data-f="${k}">
           <img src="${BASE}docs/renders/units/${f.hero}.png" alt="">
           <b>${D.factions[k].name}</b><small>${f.tag}</small></div>`).join('')}</div>
-      <h2>Союзники под управлением компьютера</h2>
-      <div class="row" id="allyRow">${[0, 1, 2, 3].map(n => `<div class="opt ${n === st.allies ? 'on' : ''}" data-a="${n}">${n === 0 ? 'Один' : '+' + n}</div>`).join('')}</div>
-      <h2>Сложность Чумы</h2>
+      <div data-show="coop"><h2>Союзники под управлением компьютера</h2>
+      <div class="row" id="allyRow">${[0, 1, 2, 3].map(n => `<div class="opt ${n === st.allies ? 'on' : ''}" data-a="${n}">${n === 0 ? 'Один' : '+' + n}</div>`).join('')}</div></div>
+      <div data-show="ffa"><h2>Соперники под управлением компьютера</h2>
+      <div class="row">${[1, 2, 3].map(n => `<div class="opt" data-o="${n}">${n}</div>`).join('')}</div></div>
+      <div data-show="ffa teams"><h2>Крысиная Чума</h2>
+      <div class="row"><div class="opt" data-r="0">Не вмешивается</div><div class="opt" data-r="1">Нападает на всех</div></div></div>
+      <h2>Сложность</h2>
       <div class="row" id="diffRow">${[['easy', 'Лёгкая'], ['normal', 'Нормальная'], ['ruthless', 'Безжалостная']].map(([k, n]) => `<div class="opt ${k === st.diff ? 'on' : ''}" data-d="${k}">${n}</div>`).join('')}</div>
-      <h2>Кооператив по сети</h2>
+      <h2>Игра по сети</h2>
       ${rtc ? `<div class="row"><input type="text" id="pname" value="${st.name}" maxlength="16" placeholder="Имя">
         <div class="opt" id="hostBtn">Создать игру</div>
         <input type="text" id="joinCode" placeholder="Код хоста" maxlength="40"><div class="opt" id="joinBtn">Подключиться</div></div>`
@@ -51,20 +59,33 @@ export function showMenu(app, onStart) {
     d.querySelectorAll('.fac').forEach(e => e.classList.toggle('on', e.dataset.f === st.faction));
     d.querySelectorAll('[data-a]').forEach(e => e.classList.toggle('on', +e.dataset.a === st.allies));
     d.querySelectorAll('[data-d]').forEach(e => e.classList.toggle('on', e.dataset.d === st.diff));
-    try { localStorage.setItem('ak.faction', st.faction); localStorage.setItem('ak.allies', st.allies); localStorage.setItem('ak.diff', st.diff); } catch { /* private mode */ }
+    d.querySelectorAll('[data-m]').forEach(e => e.classList.toggle('on', e.dataset.m === st.mode));
+    d.querySelectorAll('[data-o]').forEach(e => e.classList.toggle('on', +e.dataset.o === st.foes));
+    d.querySelectorAll('[data-r]').forEach(e => e.classList.toggle('on', (e.dataset.r === '1') === st.rats));
+    d.querySelectorAll('[data-show]').forEach(e => { e.hidden = !e.dataset.show.split(' ').includes(st.mode); });
+    try {
+      localStorage.setItem('ak.faction', st.faction); localStorage.setItem('ak.allies', st.allies); localStorage.setItem('ak.diff', st.diff);
+      localStorage.setItem('ak.mode', st.mode); localStorage.setItem('ak.foes', st.foes); localStorage.setItem('ak.rats', st.rats ? '1' : '0');
+    } catch { /* private mode */ }
   };
+  sync();
   d.addEventListener('click', e => {
     const f = e.target.closest('[data-f]'), a = e.target.closest('[data-a]'), df = e.target.closest('[data-d]');
+    const m = e.target.closest('[data-m]'), o = e.target.closest('[data-o]'), r = e.target.closest('[data-r]');
     if (f) st.faction = f.dataset.f; if (a) st.allies = +a.dataset.a; if (df) st.diff = df.dataset.d;
+    if (m) st.mode = m.dataset.m; if (o) st.foes = +o.dataset.o; if (r) st.rats = r.dataset.r === '1';
     sync();
   });
   d.querySelector('#pname').addEventListener('input', e => { st.name = e.target.value || 'Игрок'; try { localStorage.setItem('ak.name', st.name); } catch { /* */ } });
   const build = () => {
     const others = Object.keys(FAC).filter(k => k !== st.faction);
     const names = { cats: 'Сэр Мурлыка', dogs: 'Барон Гав', hamsters: 'Пан Хомяк', hares: 'Боярин Косой' };
-    const players = [{ name: st.name, faction: st.faction }];
-    for (let i = 0; i < st.allies; i++) players.push({ name: names[others[i]] + ' (ИИ)', faction: others[i], ai: true });
-    return { players, me: 0, difficulty: st.diff, seed: (Math.random() * 1e9) | 0 };
+    const players = [{ name: st.name, faction: st.faction, team: 0 }];
+    const ai = (i, team) => players.push({ name: names[others[i]] + ' (ИИ)', faction: others[i], ai: true, team });
+    if (st.mode === 'coop') for (let i = 0; i < st.allies; i++) ai(i, 0);
+    else if (st.mode === 'ffa') for (let i = 0; i < st.foes; i++) ai(i, i + 1);
+    else { ai(0, 0); ai(1, 1); ai(2, 1); }
+    return { players, me: 0, difficulty: st.diff, seed: (Math.random() * 1e9) | 0, mode: st.mode === 'coop' ? 'coop' : 'melee', rats: st.rats };
   };
   d.querySelector('#startBtn').onclick = () => { d.remove(); onStart(build()); };
   if (rtc) d.querySelector('#hostBtn').onclick = () => app.net.host?.(st, d, cfg => { d.remove(); onStart(cfg); });
@@ -89,8 +110,10 @@ export function showEnd(app, result) {
   const rows = w.players.map(p => `<tr><td style="color:${p.color}">■</td><td>${p.name}</td><td>${p.stats.kills}</td><td>${p.stats.lost}</td><td>${Math.floor(p.mined)}</td><td>${p.stats.gathered}</td></tr>`).join('');
   const d = screen('endScreen', `<div class="card frame">
     <div class="res ${result}">${result === 'victory' ? 'Победа!' : 'Поражение'}</div>
-    <p class="sub">${result === 'victory' ? 'Крысиная Чума отброшена в подземелья. Королевство спасено!' : 'Ратуши пали. Крысы празднуют в наших амбарах…'}</p>
-    <p class="sub">Время: ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')} · Волн отбито: ${w.director.n}</p>
+    <p class="sub">${w.mode === 'melee'
+      ? (result === 'victory' ? 'Все соперники повержены. Ваши знамёна над Мельничным прудом!' : 'Ваше королевство пало в схватке.')
+      : (result === 'victory' ? 'Крысиная Чума отброшена в подземелья. Королевство спасено!' : 'Ратуши пали. Крысы празднуют в наших амбарах…')}</p>
+    <p class="sub">Время: ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}${w.ratsOn ? ` · Волн отбито: ${w.director.n}` : ''}</p>
     <table><tr><th></th><th>Игрок</th><th>Убито</th><th>Потеряно</th><th>Золото</th><th>Ресурсы</th></tr>${rows}</table>
     <button class="big-btn" id="again">Ещё раз</button></div>`);
   d.querySelector('#again').onclick = () => location.reload();

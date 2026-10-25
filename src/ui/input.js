@@ -97,7 +97,7 @@ export class Input {
     if (this.box) { this.box.x1 = e.clientX; this.box.y1 = e.clientY; }
     if (this.mode?.kind === 'target') {
       const t = this.pick(e.clientX, e.clientY);
-      this.app.root.classList.toggle('enemy', !!t && this.w.isHostile({ team: 0 }, t));
+      this.app.root.classList.toggle('enemy', !!t && this.w.isHostile({ team: this.app.myTeam }, t));
     }
   }
 
@@ -158,7 +158,7 @@ export class Input {
     if (!t && units.some(u => u.def.gatherer)) t = this.pickTree(g) || this.pickShoal(g);
     app.send({ t: 'smart', ids: units.map(u => u.id), x: g.x, y: g.y, target: t?.id || 0, queue });
     if (t) app.fx.highlight(t);
-    app.audio?.ack(units[0], t && w.isHostile({ team: 0 }, t) ? 'attack' : 'move');
+    app.audio?.ack(units[0], t && w.isHostile({ team: app.myTeam }, t) ? 'attack' : 'move');
   }
 
   // a targeting command aimed at the minimap: ground point only
@@ -184,7 +184,7 @@ export class Input {
     if (!g) return;
     const t = at ? null : this.pick(e.clientX, e.clientY);
     switch (m.cmd) {
-      case 'move': app.send({ t: 'smart', ids: m.ids, x: g.x, y: g.y, target: t && !this.w.isHostile({ team: 0 }, t) ? t.id : 0, queue }); break;
+      case 'move': app.send({ t: 'smart', ids: m.ids, x: g.x, y: g.y, target: t && !this.w.isHostile({ team: this.app.myTeam }, t) ? t.id : 0, queue }); break;
       case 'attack':
         if (t && t.id) { app.send({ t: 'attack', ids: m.ids, target: t.id, queue }); app.fx.highlight(t, 'enemy'); }
         else app.send({ t: 'amove', ids: m.ids, x: g.x, y: g.y, queue });

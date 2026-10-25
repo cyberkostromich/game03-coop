@@ -110,10 +110,15 @@ export class Net {
     btn.onclick = () => {
       this.started = true;
       // fill with computer allies if requested
-      const extra = Math.max(0, Math.min(4 - this.slots.length, +(this.app.menuState?.allies) || 0));
+      const ms0 = this.app.menuState || {};
+      const want = ms0.mode === 'teams' ? 4 : ms0.mode === 'ffa' ? this.slots.length + (ms0.foes || 0) : this.slots.length + (+ms0.allies || 0);
+      const extra = Math.max(0, Math.min(4, want) - this.slots.length);
       for (let i = 0; i < extra; i++) { const used = new Set(this.slots.map(s => s.faction)); this.slots.push({ peer: null, name: 'Союзник (ИИ)', faction: FACTIONS.find(f => !used.has(f)), ai: true }); }
-      const players = this.slots.map(s => ({ name: s.name, faction: s.faction, ai: !!s.ai }));
-      const cfg = { players, difficulty: this.app.menuState?.diff || 'normal', seed: (Math.random() * 1e9) | 0, net: 'host' };
+      const ms = this.app.menuState || {};
+      const team = i => ms.mode === 'ffa' ? i : ms.mode === 'teams' ? (i < 2 ? 0 : 1) : 0;
+      const players = this.slots.map((s, i) => ({ name: s.name, faction: s.faction, ai: !!s.ai, team: team(i) }));
+      const cfg = { players, difficulty: ms.diff || 'normal', seed: (Math.random() * 1e9) | 0, net: 'host',
+                    mode: ms.mode && ms.mode !== 'coop' ? 'melee' : 'coop', rats: !!ms.rats };
       this.slots.forEach((s, i) => { if (s.peer) { this.bus.send(s.peer, { k: 'start', cfg: { ...cfg, me: i, net: 'client' } }); this.acks.set(s.peer, 0); } });
       onStart({ ...cfg, me: 0 });
     };

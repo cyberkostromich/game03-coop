@@ -29,11 +29,16 @@ export class AllyAI {
     const onGold = workers.filter(u => u.order.t === 'gather' && u.order.res === 'gold').length;
     for (const u of workers) {
       if (u.order.t !== 'idle') continue;
-      if (mine && onGold < 5) { this.cmd({ t: 'gather', ids: [u.id], target: mine.id }); continue; }
+      const goldWanted = P.wood > 500 && P.gold < 300 ? 10 : 8;   // trips take long: more than 5 keep the mine busy
+      if (mine && onGold < goldWanted) { this.cmd({ t: 'gather', ids: [u.id], target: mine.id }); continue; }
       const tree = w.nearest(u.x, u.y, e => e.kind === 'tree' && e.alive, 30);
       if (tree) this.cmd({ t: 'gather', ids: [u.id], target: tree.id });
     }
     if (!hall) return;
+    if (mine && P.wood > 700 && P.gold < 250) {
+      const lj = workers.find(u => u.order.t === 'gather' && u.order.res === 'wood' && !u.hidden);
+      if (lj) this.cmd({ t: 'gather', ids: [lj.id], target: mine.id });
+    }
     const queued = q => this.myB(b => b.queue.some(x => x.unit === q)).length;
     if (workers.length + queued(F.worker) < 13 && hall.queue.length < 2) this.cmd({ t: 'train', building: hall.id, unit: F.worker });
     const building = this.my(u => u.order.t === 'build' || u.order.t === 'construct').length;
@@ -66,15 +71,21 @@ export class AllyAI {
     const army = this.my(u => !u.def.gatherer && !u.summoned);
     // defend anything of ours under attack
     let threat = null;
+    const me = { team: this.P.team };
     for (const b of this.myB(() => true)) {
-      w.query(b.x, b.y, 14, e => { if (!threat && e.team === 1 && e.alive) threat = e; });
+      w.query(b.x, b.y, 14, e => { if (!threat && e.alive && e.team !== 101 && w.isHostile(me, e)) threat = e; });
       if (threat) break;
     }
     const idle = army.filter(u => u.order.t === 'idle' || u.order.t === 'guard');
     if (threat) {
       const ids = army.filter(u => u.order.t !== 'attack' && u.order.t !== 'amove').map(u => u.id);
       if (ids.length) this.cmd({ t: 'amove', ids, x: threat.x, y: threat.y });
-    } else if (army.length >= 14 && w.director.n >= 2 && idle.length >= 10) {
+    } else if (w.mode === 'melee' && idle.length >= this.waveSize()) {
+      // march on the nearest enemy kingdom; the force grows every attack
+      const foe = w.blds.filter(b => b.alive && b.team < 100 && b.team !== this.P.team)
+        .sort((a, b) => Math.hypot(a.x - hall.x, a.y - hall.y) - Math.hypot(b.x - hall.x, b.y - hall.y))[0];
+      if (foe) { this.attacks = (this.attacks || 0) + 1; this.cmd({ t: 'amove', ids: idle.map(u => u.id), x: foe.x, y: foe.y }); }
+    } else if (w.ratsOn && army.length >= 14 && w.director.n >= 2 && idle.length >= 10) {
       // push the nearest pit
       const pit = w.blds.filter(b => b.alive && b.type === 'rat_pit').sort((a, b) => Math.hypot(a.x - hall.x, a.y - hall.y) - Math.hypot(b.x - hall.x, b.y - hall.y))[0];
       if (pit) this.cmd({ t: 'amove', ids: idle.map(u => u.id), x: pit.x, y: pit.y - pit.h / 2 - 2 });
@@ -92,6 +103,12 @@ export class AllyAI {
         if (a.type === 'point') { this.cmd({ t: 'cast', id: h.id, key: k, x: foe.x, y: foe.y }); break; }
       }
     }
+  }
+
+  // first attack after ~7 minutes with 8 soldiers, then bigger waves
+  waveSize() {
+    if (this.w.time < ({ easy: 600, normal: 420, ruthless: 300 }[this.w.diff] || 420)) return Infinity;
+    return 8 + 3 * (this.attacks || 0);
   }
 
   build(type, hall, minR = 9) {

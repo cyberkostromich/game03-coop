@@ -12,8 +12,9 @@ import { RatDirector } from './ai.js';
 export const HZ = 20, DT = 1 / HZ;
 export { RATS, NEUTRAL };
 
-const TEAM_OF = o => (o === RATS ? 1 : o === NEUTRAL ? 2 : 0);
-const hostile = (a, b) => a !== b && !(a === 1 && b === 2) && !(a === 2 && b === 1);
+// player teams are 0..3; the plague and the wild beasts have their own
+export const RATS_T = 100, NEUTRAL_T = 101;
+const hostile = (a, b) => a !== b && !(a >= 100 && b >= 100);
 const HASH = 4;                                    // spatial hash bucket, metres
 const DAY = 480;                                   // full day/night cycle, seconds
 
@@ -31,7 +32,12 @@ export class World {
     this.events = [];
     this.cmds = [];
     this.diff = setup.difficulty || 'normal';
-    this.result = null;                            // 'victory' | 'defeat'
+    // 'coop': everyone together against the Rat Plague; 'melee': free-for-all
+    // or teams, against each other and computer opponents (rats optional)
+    this.mode = setup.mode || 'coop';
+    this.ratsOn = this.mode === 'coop' || !!setup.rats;
+    this.result = null;                            // coop: 'victory' | 'defeat'; melee: 'over' + winner
+    this.winner = -1;
     const M = D.map;
     this.grid = new Grid(M.size, M.resolution, D.mapBin.path, D.mapBin.height, M.height_min, M.height_max);
     this.grid.openUnderTrees(M.trees, D.economy.trees.block_radius);
@@ -39,11 +45,13 @@ export class World {
     this.hash = Array.from({ length: this.hashN * this.hashN }, () => []);
     this.players = setup.players.map((p, i) => ({
       id: i, name: p.name, faction: p.faction, color: p.color, ai: !!p.ai,
+      team: this.mode === 'coop' ? 0 : (p.team ?? i),
       gold: D.economy.start.gold, wood: D.economy.start.wood, food: D.economy.start.food,
       popUsed: 0, popCap: 0, tier: 1, mined: 0, heroes: [], deadHeroes: [], alive: true, stats: { kills: 0, lost: 0, gathered: 0 },
     }));
-    this.vis = new Uint8Array(this.grid.n * this.grid.n);
-    this.explored = new Uint8Array(this.grid.n * this.grid.n);
+    // fog of war per player team
+    this.vision = {};
+    for (const p of this.players) this.vision[p.team] ||= { vis: new Uint8Array(this.grid.n * this.grid.n), explored: new Uint8Array(this.grid.n * this.grid.n) };
     this.visVersion = 0;
     this.abilities = new Abilities(this);
     this.zones = [];                               // ground effects (rain, roots, heal circles)
@@ -74,7 +82,7 @@ export class World {
     if (mill) { const s = this.placeBuilding('mill', NEUTRAL, mill.x, mill.y + 1, true); s.invuln = true; }
     for (const [i, s] of M.fishing_shoals.entries())
       this.add({ kind: 'shoal', type: 'shoal', owner: NEUTRAL, x: s.x, y: s.y, r: 1.5, hp: 1, maxHp: 1, food: 1600, idx: i });
-    for (const p of M.rat_pits) {
+    if (this.ratsOn) for (const p of M.rat_pits) {
       const b = this.placeBuilding('rat_pit', RATS, p.x, p.y, true);
       b.opensAfter = p.opens_after_wave;
     }
@@ -113,7 +121,7 @@ export class World {
   add(e) {
     e.id = this.nextId++;
     e.alive = true;
-    e.team = TEAM_OF(e.owner);
+    e.team = this.teamOf(e.owner);
     e.born = this.tick;
     this.ents.push(e);
     this.byId.set(e.id, e);
@@ -123,6 +131,12 @@ export class World {
   }
 
   unitDef(type) { return this.defs.units[type]; }
+
+  teamOf(o) { return o === RATS ? RATS_T : o === NEUTRAL ? NEUTRAL_T : this.players[o].team; }
+  visionOf(team) { return this.vision[team] || this.vision[0] || Object.values(this.vision)[0]; }
+  get vis() { return this.visionOf(this.viewTeam ?? 0).vis; }          // view-side convenience
+  get explored() { return this.visionOf(this.viewTeam ?? 0).explored; }
+  teams() { return [...new Set(this.players.filter(p => p.alive).map(p => p.team))]; }
 
   spawnUnit(type, owner, x, y, opts = {}) {
     const d = this.defs.units[type];
@@ -213,11 +227,11 @@ export class World {
   isHostile(a, b) { return hostile(a.team, b.team); }
 
   visibleTo(team, e) {
-    if (team !== 0) return !e.mods?.invisible;
+    if (team >= 100) return !e.mods?.invisible;
     if (this.revealAll) return true;
-    if (e.team === 0) return true;
+    if (e.team === team) return true;
     const i = this.grid.idx(e.x, e.y);
-    if (i < 0 || !this.vis[i]) return false;
+    if (i < 0 || !this.visionOf(team).vis[i]) return false;
     if (e.mods?.invisible && !this.detected(e)) return false;
     return true;
   }
@@ -236,17 +250,17 @@ export class World {
     if (!this.isHostile(a, t)) return false;
     if (t.kind === 'building' && t.built === 0 && t.owner === NEUTRAL) return false;
     if (t.mods?.invisible) {
-      if (a.team !== 0) return false;
+      if (a.team >= 100) return false;
       if (!this.detected(t)) return false;
     }
-    if (a.team === 0 && t.team !== 0 && !this.visibleTo(0, t) && t.kind === 'unit') return false;
+    if (a.team < 100 && t.kind === 'unit' && !this.visibleTo(a.team, t)) return false;
     return true;
   }
 
   // --------------------------------------------------------------- commands
   issue(cmd) { this.cmds.push(cmd); }
 
-  owns(p, e) { return e && e.alive && (e.owner === p || (this.sharedControl && e.team === 0 && this.players[e.owner])); }
+  owns(p, e) { return e && e.alive && (e.owner === p || (this.sharedControl && this.players[e.owner] && e.team === this.players[p].team)); }
 
   applyCommand(c) {
     const P = this.players[c.p];
@@ -307,7 +321,7 @@ export class World {
         else groupTarget.push(u);
       }
       if (groupTarget.length) this.groupMove(groupTarget, 'move', c.x, c.y, c.queue);
-      this.event({ k: 'ack', p: c.p, id: t.id, kind: this.isHostile({ team: 0 }, t) ? 'attack' : 'move' });
+      this.event({ k: 'ack', p: c.p, id: t.id, kind: this.isHostile({ team: this.players[c.p].team }, t) ? 'attack' : 'move' });
       return;
     }
     this.groupMove(units, 'move', c.x, c.y, c.queue);
@@ -479,7 +493,7 @@ export class World {
 
   cmdTransfer(P, c) {
     const T = this.players[c.to];
-    if (!T || T === P) return;
+    if (!T || T === P || T.team !== P.team) return;
     const tax = this.D.economy.transfer_tax;
     const g = Math.max(0, Math.min(P.gold, c.gold || 0)), w = Math.max(0, Math.min(P.wood, c.wood || 0));
     P.gold -= g; P.wood -= w;
@@ -512,7 +526,7 @@ export class World {
     this.rebuildHash();
     this.blist = this.blds.filter(e => e.alive);
     this.abilities.tick();
-    this.director.tick();
+    if (this.ratsOn) this.director.tick();
     const units = [];
     for (const e of this.units) if (e.alive) { this.unitTick(e); units.push(e); }
     for (const b of this.blist) if (b.alive) this.buildingTick(b);
@@ -534,7 +548,7 @@ export class World {
     }
     const team = this.players.reduce((s, p) => s + p.mined, 0);
     const allT3 = this.players.every(p => !p.alive || p.tier >= 3);
-    if (!this.crusade.ready && team >= this.D.economy.royal_treasury_goal && allT3) {
+    if (this.mode === 'coop' && !this.crusade.ready && team >= this.D.economy.royal_treasury_goal && allT3) {
       this.crusade.ready = true;
       this.msg(-1, 'Королевская казна полна! Доступен Крестовый поход', 'ally');
     }
@@ -561,10 +575,15 @@ export class World {
   }
 
   updateVision() {
-    const g = this.grid, n = g.n, V = this.vis;
+    for (const team of Object.keys(this.vision)) this.updateTeamVision(+team);
+    this.visVersion++;
+  }
+
+  updateTeamVision(team) {
+    const g = this.grid, n = g.n, V = this.vision[team].vis;
     V.fill(0);
     for (const e of this.units.concat(this.blds)) {
-      if (!e.alive || e.team !== 0) continue;
+      if (!e.alive || e.team !== team) continue;
       const r = e.kind === 'unit' ? e.def.sight * (this.isNight && !e.def.hero ? 0.8 : 1) : (e.built >= 1 ? e.def.sight : 4);
       const cx = g.cx(e.x), cy = g.cy(e.y), R = Math.ceil(r), r2 = r * r;
       for (let dy = -R; dy <= R; dy++) {
@@ -575,12 +594,11 @@ export class World {
       }
     }
     if (this.revealAll) V.fill(1);
-    for (const z of this.zones) if (z.kind === 'reveal' || z.kind === 'ward') {
+    for (const z of this.zones) if ((z.kind === 'reveal' || z.kind === 'ward') && z.team === team) {
       g.forCells(z.x, z.y, z.r, i => { V[i] = 1; });
     }
-    const X = this.explored;
+    const X = this.vision[team].explored;
     for (let i = 0; i < V.length; i++) if (V[i]) X[i] = 1;
-    this.visVersion++;
   }
 
   // ------------------------------------------------------------------ units
@@ -658,7 +676,7 @@ export class World {
       const s = Math.hypot(t.x - e.x, t.y - e.y) - t.r + (t.def.gatherer ? 3 : 0) + (t.order?.t === 'attack' ? -1 : 0);
       if (s < bs) { bs = s; best = t; }
     });
-    if (!best && e.team !== 0) {
+    if (!best) {
       // structures in range (rats chew on buildings)
       for (const b of this.blist) {
         if (!b.alive || !this.canTarget(e, b)) continue;
@@ -828,7 +846,7 @@ export class World {
     t.lastCombat = this.tick;
     if (src && src.kind === 'unit') src.lastCombat = this.tick;
     this.event({ k: 'hit', id: t.id, src: src?.id, amt: Math.round(dmg), atk });
-    if (t.kind === 'unit' && t.team === 0 && this.players[t.owner] && this.tick - (this.players[t.owner].alertT || -999) > 200 && src?.team !== 0) {
+    if (t.kind === 'unit' && this.players[t.owner] && this.tick - (this.players[t.owner].alertT || -999) > 200 && src && src.team !== t.team) {
       this.players[t.owner].alertT = this.tick;
       this.event({ k: 'alert', p: t.owner, x: t.x, y: t.y });
     }
@@ -959,7 +977,18 @@ export class World {
       if (!P.alive) continue;
       const hasHall = this.blds.some(e => e.alive && e.owner === P.id && e.def.role === 'town_hall');
       const hasUnits = this.units.some(e => e.alive && e.owner === P.id && e.def.gatherer);
-      if (!hasHall && !hasUnits) { P.alive = false; this.msg(-1, `${P.name} выбывает из игры`, 'alert'); }
+      // melee follows WC3: a kingdom without a single building is out
+      const out = this.mode === 'melee' ? !this.blds.some(e => e.alive && e.owner === P.id) : !hasHall && !hasUnits;
+      if (out) {
+        P.alive = false;
+        this.msg(-1, `${P.name} выбывает из игры`, 'alert');
+        if (this.mode === 'melee') for (const u of this.units) if (u.alive && u.owner === P.id) this.kill(u, null);
+      }
+    }
+    if (this.mode === 'melee') {
+      const alive = this.teams();
+      if (alive.length <= 1) { this.result = 'over'; this.winner = alive[0] ?? -1; this.event({ k: 'end', result: 'over', winner: this.winner }); }
+      return;
     }
     if (this.players.every(p => !p.alive)) { this.result = 'defeat'; this.event({ k: 'end', result: 'defeat' }); return; }
     const pits = this.blds.filter(e => e.alive && e.type === 'rat_pit');
@@ -1369,7 +1398,7 @@ World.prototype.serialize = function () {
   const zones = this.zones.map(z => ({ ...z, hit: z.hit ? [...z.hit] : undefined }));
   return JSON.stringify({
     tick: this.tick, nextId: this.nextId, rng: this.rng.s, ents, zones, projectiles: this.projectiles,
-    players: this.players, explored: Array.from(this.explored), crusade: this.crusade, millHolder: this.millHolder,
+    players: this.players, explored: Object.fromEntries(Object.entries(this.vision).map(([t, v]) => [t, Array.from(v.explored)])), crusade: this.crusade, millHolder: this.millHolder,
     director: { n: this.director.n, next: this.director.next, kingSlain: this.director.kingSlain, groups: this.director.groups },
   });
 };
@@ -1381,7 +1410,7 @@ World.prototype.restore = function (json) {
   this.players.forEach((p, i) => Object.assign(p, S.players[i]));
   this.crusade = S.crusade; this.millHolder = S.millHolder;
   Object.assign(this.director, S.director);
-  this.explored.set(S.explored);
+  for (const [t, arr] of Object.entries(S.explored)) this.vision[t]?.explored.set(arr);
   this.projectiles = S.projectiles;
   // rebuild entities; trees keep their static data and view handle
   const ents = [];

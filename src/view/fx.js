@@ -212,7 +212,7 @@ export class Fx {
     const w = this.app.world;
     if (!kind) {
       const res = t.kind === 'tree' || t.kind === 'shoal' || t.type === 'gold_mine';
-      kind = res ? 'resource' : t.kind === 'item' ? 'resource' : w.isHostile({ team: 0 }, t) ? 'enemy' : 'friend';
+      kind = res ? 'resource' : t.kind === 'item' ? 'resource' : w.isHostile({ team: this.app.myTeam }, t) ? 'enemy' : 'friend';
     }
     const col = { resource: [1, 0.82, 0.2], enemy: [1, 0.02, 0.02], friend: [0.3, 1, 0.4] }[kind];
     const r = t.kind === 'building' ? Math.max(t.w, t.h) * 1.25 : t.kind === 'tree' ? 2.6 : t.kind === 'shoal' ? 5 : (t.r || 0.5) * 2.8;

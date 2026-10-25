@@ -66,8 +66,10 @@ class App {
     this.me = cfg.me;
     this.diffName = DIFF[cfg.difficulty] || '';
     const players = cfg.players.map((p, i) => ({ ...p, color: p.color || COLORS[i] }));
-    this.world = new World(this.D, { players, difficulty: cfg.difficulty, seed: cfg.seed });
+    this.world = new World(this.D, { players, difficulty: cfg.difficulty, seed: cfg.seed, mode: cfg.mode, rats: cfg.rats });
     this.world.sharedControl = !!cfg.sharedControl;
+    this.myTeam = this.world.players[this.me].team;
+    this.world.viewTeam = this.myTeam;                 // fog and minimap show what my team sees
     if (new URLSearchParams(location.search).has('reveal') && !cfg.net) this.world.revealAll = true;
     this.allies = players.map((p, i) => p.ai ? new AllyAI(this.world, i) : null);
     this.scene = new THREE.Scene();
@@ -102,7 +104,8 @@ class App {
       for (const a of this.allies) if (a) a.sink = c => this.net.sendCmd(c);
     }
     loading.style.opacity = 0; setTimeout(() => loading.remove(), 800);
-    this.hud.banner('Оборона Королевства', 'Крысиная Чума поднимается из подземелий. Продержитесь и засыпьте провалы!', 5000);
+    if (this.world.mode === 'melee') this.hud.banner('Схватка', this.world.ratsOn ? 'Каждый за себя — и Крысиная Чума против всех. Уничтожьте все здания соперников!' : 'Уничтожьте все здания соперников!', 5000);
+    else this.hud.banner('Оборона Королевства', 'Крысиная Чума поднимается из подземелий. Продержитесь и засыпьте провалы!', 5000);
     this.hud.msg('Подсказка: ПКМ — приказ, рамка — выделение, A — атака, B — строить (у рабочих), Ctrl+1..9 — отряды', 'info');
     this.audio.unlock();
     this.last = performance.now();
@@ -230,7 +233,7 @@ class App {
     for (const id of this.sel) { const e = w.byId.get(id); if (e) this.views.setSelected(e, null); }
     this.sel = use.map(e => e.id);
     this.subType = use[0]?.type || null;
-    for (const e of use) this.views.setSelected(e, e.owner === this.me ? '#5cff6a' : e.team === 0 ? '#ffe060' : e.owner === 5 ? '#ffd060' : '#ff4030');
+    for (const e of use) this.views.setSelected(e, e.owner === this.me ? '#5cff6a' : e.team === this.myTeam ? '#ffe060' : e.owner === 5 ? '#ffd060' : '#ff4030');
     this.menu = null;
     if (this.input?.mode?.kind === 'target') this.input.setMode(null);
     if (this.hud) this.hud.sig = '';
@@ -313,9 +316,10 @@ class App {
         case 'alert': if (ev.p === this.me) { this.alerts.push({ x: ev.x, y: ev.y }); if (this.alerts.length > 5) this.alerts.shift(); this.minimap.ping(ev.x, ev.y, '#ff4a3a'); this.audio.play('alert'); this.hud.msg('Нас атакуют! (Пробел — к месту боя)', 'alert'); } break;
         case 'crusade': this.audio.play('horn'); this.hud.banner('Крестовый поход!', '+30% к урону и скорости на 60 секунд'); break;
         case 'boss_dead': this.hud.banner('Крыса-Король повержен!', ''); break;
-        case 'end': this.end(ev.result); break;
+        case 'end': this.end(ev.result === 'over' ? (ev.winner === this.myTeam ? 'victory' : 'defeat') : ev.result); break;
       }
     }
+    if (w.mode === 'melee' && !w.players[this.me].alive && !this.ended) this.end('defeat');
     w.events.length = 0;
   }
 
@@ -326,6 +330,8 @@ class App {
   }
 
   end(result) {
+    if (this.ended) return;
+    this.ended = true;
     this.audio.play(result === 'victory' ? 'victory' : 'defeat');
     setTimeout(() => showEnd(this, result), 1800);
   }
