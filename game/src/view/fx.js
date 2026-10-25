@@ -205,6 +205,24 @@ export class Fx {
     this.markers.push({ m, t: 0, ttl, r0: 0.3, r1: r, wall: true });
   }
 
+  // WC3-style target flash: the ring under the ordered target blinks three
+  // times. Gold, wood and fish glow gold; enemies red; own and allied green.
+  highlight(t, kind) {
+    if (!t) return;
+    const w = this.app.world;
+    if (!kind) {
+      const res = t.kind === 'tree' || t.kind === 'shoal' || t.type === 'gold_mine';
+      kind = res ? 'resource' : t.kind === 'item' ? 'resource' : w.isHostile({ team: 0 }, t) ? 'enemy' : 'friend';
+    }
+    const col = { resource: [1, 0.82, 0.2], enemy: [1, 0.02, 0.02], friend: [0.3, 1, 0.4] }[kind];
+    const r = t.kind === 'building' ? Math.max(t.w, t.h) * 1.25 : t.kind === 'tree' ? 2.6 : t.kind === 'shoal' ? 5 : (t.r || 0.5) * 2.8;
+    const m = new THREE.Mesh(this.discGeo, new THREE.MeshBasicMaterial({ map: this.app.views.ringTex, color: new THREE.Color(...col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    m.scale.set(r, 1, r); m.renderOrder = 4;
+    m.position.set(t.x, (t.kind === 'shoal' ? 0 : this.h(t.x, t.y)) + 0.1, -t.y);
+    this.scene.add(m);
+    this.markers.push({ m, t: 0, ttl: 0.9, blink: true, follow: t.kind === 'unit' ? t.id : 0 });
+  }
+
   marker(x, y, col) { this.ring(x, y, col, 1.4, 0.5); this.parts.burst(x, this.h(x, y) + 0.1, -y, 8, { color: col, speed: 1.5, ttl: 0.4, size: 0.15, gravity: 0 }); }
 
   cast(ev) {
@@ -320,6 +338,11 @@ export class Fx {
       m.t += dt;
       const k = m.t / m.ttl;
       if (m.follow) { const e = w.byId.get(m.follow); if (e) m.m.position.set(e.x, this.h(e.x, e.y) + 0.08, -e.y); }
+      if (m.blink) {
+        m.m.material.opacity = Math.max(0, Math.sin(k * Math.PI * 6)) * (1 - k * 0.4);
+        if (k >= 1) { this.scene.remove(m.m); m.m.material.dispose(); return false; }
+        return true;
+      }
       const r = m.r0 + (m.r1 - m.r0) * Math.min(1, k * 1.5);
       if (m.sweep) m.m.scale.setScalar(r);
       else if (m.wall) m.m.scale.set(r, 1 - k * 0.7, r);

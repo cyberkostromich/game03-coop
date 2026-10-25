@@ -9,7 +9,7 @@ export function buildDefs(D) {
   const units = {}, buildings = {};
   for (const [id, u] of Object.entries(D.units)) {
     units[id] = {
-      id, kind: 'unit', name: u.name || id, faction: u.faction, role: u.role,
+      id, kind: 'unit', name: u.name || D.unitAssets?.[u.model || id]?.name || id, faction: u.faction, role: u.role,
       hp: u.hp, mana: 0, armor: u.armor, armorType: u.armor_type,
       dmg: u.damage, atkType: u.attack_type, cooldown: u.cooldown, range: u.range,
       speed: u.speed, sight: Math.max(10, u.sight || 10), pop: u.pop || 0, cost: u.cost, buildTime: u.build_time || 20,

@@ -23,7 +23,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "cat_worker",
-  "gatherer": true
+  "gatherer": true,
+  "name": "Котёнок-подмастерье"
  },
  "cat_swordsman": {
   "faction": "cats",
@@ -48,7 +49,8 @@
   "build_time": 20,
   "tier": 1,
   "sight": 9.0,
-  "model": "cat_swordsman"
+  "model": "cat_swordsman",
+  "name": "Мечник-полосатик"
  },
  "cat_crossbow": {
   "faction": "cats",
@@ -74,7 +76,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "cat_crossbow",
-  "projectile": "bolt"
+  "projectile": "bolt",
+  "name": "Арбалетчик-сиамец"
  },
  "cat_assassin": {
   "faction": "cats",
@@ -100,7 +103,8 @@
   "tier": 3,
   "sight": 9.0,
   "model": "cat_assassin",
-  "night_invisible": true
+  "night_invisible": true,
+  "name": "Чёрный кот-ассасин"
  },
  "dog_worker": {
   "faction": "dogs",
@@ -126,7 +130,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "dog_worker",
-  "gatherer": true
+  "gatherer": true,
+  "name": "Щенок-оруженосец"
  },
  "dog_halberdier": {
   "faction": "dogs",
@@ -152,7 +157,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "dog_halberdier",
-  "pack": 0.05
+  "pack": 0.05,
+  "name": "Овчарка-алебардщик"
  },
  "dog_archer": {
   "faction": "dogs",
@@ -178,7 +184,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "dog_archer",
-  "detects": true
+  "detects": true,
+  "name": "Лучник-гончая"
  },
  "dog_bulldog_guard": {
   "faction": "dogs",
@@ -204,7 +211,8 @@
   "tier": 3,
   "sight": 9.0,
   "model": "dog_bulldog_guard",
-  "pack": 0.05
+  "pack": 0.05,
+  "name": "Бульдог-гвардеец"
  },
  "ham_worker": {
   "faction": "hamsters",
@@ -231,7 +239,8 @@
   "sight": 9.0,
   "model": "ham_worker",
   "gatherer": true,
-  "carry_mult": 2
+  "carry_mult": 2,
+  "name": "Хомяк-носильщик"
  },
  "ham_militia": {
   "faction": "hamsters",
@@ -256,7 +265,8 @@
   "build_time": 15,
   "tier": 1,
   "sight": 9.0,
-  "model": "ham_militia"
+  "model": "ham_militia",
+  "name": "Ополченец с вилкой"
  },
  "ham_slinger": {
   "faction": "hamsters",
@@ -282,7 +292,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "ham_slinger",
-  "projectile": "seed"
+  "projectile": "seed",
+  "name": "Пращник с семечками"
  },
  "ham_barrel": {
   "faction": "hamsters",
@@ -307,7 +318,8 @@
   "build_time": 36,
   "tier": 3,
   "sight": 9.0,
-  "model": "ham_barrel"
+  "model": "ham_barrel",
+  "name": "Хомяк-тяжеловес в бочке-доспехе"
  },
  "hare_worker": {
   "faction": "hares",
@@ -333,7 +345,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "hare_worker",
-  "gatherer": true
+  "gatherer": true,
+  "name": "Крольчонок-огородник"
  },
  "hare_spearman": {
   "faction": "hares",
@@ -359,7 +372,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "hare_spearman",
-  "leap": true
+  "leap": true,
+  "name": "Копейщик-русак"
  },
  "hare_archer": {
   "faction": "hares",
@@ -385,7 +399,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "hare_archer",
-  "projectile": "arrow"
+  "projectile": "arrow",
+  "name": "Лучник-беляк"
  },
  "hare_vityaz": {
   "faction": "hares",
@@ -410,7 +425,8 @@
   "build_time": 30,
   "tier": 3,
   "sight": 9.0,
-  "model": "hare_vityaz"
+  "model": "hare_vityaz",
+  "name": "Князь-витязь"
  },
  "rat_raider": {
   "faction": "rats",
@@ -436,7 +452,8 @@
   "tier": 1,
   "sight": 9.0,
   "model": "rat_raider",
-  "ai_only": true
+  "ai_only": true,
+  "name": "Крыса-оборванец"
  },
  "rat_plague_doctor": {
   "faction": "rats",
@@ -463,7 +480,8 @@
   "sight": 9.0,
   "model": "rat_plague_doctor",
   "ai_only": true,
-  "heals": 8
+  "heals": 8,
+  "name": "Чумной лекарь"
  },
  "rat_king": {
   "faction": "rats",
@@ -490,6 +508,7 @@
   "sight": 9.0,
   "model": "rat_king",
   "ai_only": true,
-  "boss": true
+  "boss": true,
+  "name": "Крыса-Король"
  }
 }

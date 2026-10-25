@@ -157,6 +157,7 @@ export class Input {
     if (!t) t = this.pickItem(g);
     if (!t && units.some(u => u.def.gatherer)) t = this.pickTree(g) || this.pickShoal(g);
     app.send({ t: 'smart', ids: units.map(u => u.id), x: g.x, y: g.y, target: t?.id || 0, queue });
+    if (t) app.fx.highlight(t);
     app.audio?.ack(units[0], t && w.isHostile({ team: 0 }, t) ? 'attack' : 'move');
   }
 
@@ -185,16 +186,16 @@ export class Input {
     switch (m.cmd) {
       case 'move': app.send({ t: 'smart', ids: m.ids, x: g.x, y: g.y, target: t && !this.w.isHostile({ team: 0 }, t) ? t.id : 0, queue }); break;
       case 'attack':
-        if (t && t.id) app.send({ t: 'attack', ids: m.ids, target: t.id, queue });
+        if (t && t.id) { app.send({ t: 'attack', ids: m.ids, target: t.id, queue }); app.fx.highlight(t, 'enemy'); }
         else app.send({ t: 'amove', ids: m.ids, x: g.x, y: g.y, queue });
         break;
       case 'patrol': app.send({ t: 'patrol', ids: m.ids, x: g.x, y: g.y, queue }); break;
       case 'gather': {
         const tt = t || this.pickTree(g) || this.pickShoal(g);
-        if (tt) app.send({ t: 'gather', ids: m.ids, target: tt.id, queue });
+        if (tt) { app.send({ t: 'gather', ids: m.ids, target: tt.id, queue }); app.fx.highlight(tt); }
         break;
       }
-      case 'rally': app.send({ t: 'rally', building: m.ids[0], x: g.x, y: g.y, target: (t || this.pickTree(g))?.id || 0 }); break;
+      case 'rally': { const rt = t || this.pickTree(g); app.send({ t: 'rally', building: m.ids[0], x: g.x, y: g.y, target: rt?.id || 0 }); if (rt) app.fx.highlight(rt); break; }
       case 'cast': {
         const u = this.w.byId.get(m.ids[0]);
         if (m.unitTarget) {

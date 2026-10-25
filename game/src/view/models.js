@@ -29,7 +29,7 @@ export class Models {
   load(kind, id, meta) {
     const key = kind + '/' + id;
     if (!this.cache.has(key)) {
-      this.cache.set(key, this.loader.loadAsync(this.url(kind, id, meta)).then(g => {
+      this.cache.set(key, this.fetchModel(this.url(kind, id, meta)).then(g => {
         if (kind !== 'props') this.merge(g.scene);
         g.scene.traverse(o => {
           if (!o.isMesh) return;
@@ -48,6 +48,30 @@ export class Models {
   }
 
   get(kind, id) { return this.ready.get(kind + '/' + id); }
+
+  // Packed builds ship glTF JSON with the geometry buffer as base64. Hosts
+  // with a strict content policy refuse to fetch data: URIs, so the buffer
+  // is decoded here and the model is re-assembled as an in-memory GLB.
+  async fetchModel(url) {
+    if (!url.endsWith('.gltf.json')) return this.loader.loadAsync(url);
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
+    const g = await r.json();
+    const uri = g.buffers[0].uri;
+    const bin = Uint8Array.from(atob(uri.slice(uri.indexOf(',') + 1)), c => c.charCodeAt(0));
+    delete g.buffers[0].uri;
+    g.buffers[0].byteLength = bin.length;
+    const enc = new TextEncoder().encode(JSON.stringify(g));
+    const jl = (enc.length + 3) & ~3, bl = (bin.length + 3) & ~3;
+    const out = new Uint8Array(12 + 8 + jl + 8 + bl);
+    const dv = new DataView(out.buffer);
+    dv.setUint32(0, 0x46546C67, true); dv.setUint32(4, 2, true); dv.setUint32(8, out.length, true);
+    dv.setUint32(12, jl, true); dv.setUint32(16, 0x4E4F534A, true);
+    out.set(enc, 20); out.fill(0x20, 20 + enc.length, 20 + jl);
+    dv.setUint32(20 + jl, bl, true); dv.setUint32(24 + jl, 0x004E4942, true);
+    out.set(bin, 28 + jl);
+    return this.loader.parseAsync(out.buffer, url.slice(0, url.lastIndexOf('/') + 1));
+  }
 
   // collapse sibling skinned primitives into one mesh with a per-vertex
   // material record: (metalness, roughness, team mask, glow)
