@@ -68,6 +68,7 @@ class App {
     const players = cfg.players.map((p, i) => ({ ...p, color: p.color || COLORS[i] }));
     this.world = new World(this.D, { players, difficulty: cfg.difficulty, seed: cfg.seed });
     this.world.sharedControl = !!cfg.sharedControl;
+    if (new URLSearchParams(location.search).has('reveal') && !cfg.net) this.world.revealAll = true;
     this.allies = players.map((p, i) => p.ai ? new AllyAI(this.world, i) : null);
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#0a0d12');
@@ -96,7 +97,10 @@ class App {
     this.overlay = new Overlay(this);
     this.portrait = this.makePortrait();
     this.indicator = this.makeIndicators();
-    if (cfg.net) this.net.attach(cfg);
+    if (cfg.net) {
+      this.net.attach(cfg);
+      for (const a of this.allies) if (a) a.sink = c => this.net.sendCmd(c);
+    }
     loading.style.opacity = 0; setTimeout(() => loading.remove(), 800);
     this.hud.banner('Оборона Королевства', 'Крысиная Чума поднимается из подземелий. Продержитесь и засыпьте провалы!', 5000);
     this.hud.msg('Подсказка: ПКМ — приказ, рамка — выделение, A — атака, B — строить (у рабочих), Ctrl+1..9 — отряды', 'info');
@@ -132,13 +136,22 @@ class App {
   }
 
   makePortrait() {
+    // own small renderer inside the HUD frame (the HUD sits above the main canvas)
+    const cv = document.createElement('canvas');
+    cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+    this.hud.$.portrait.prepend(cv);
+    const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+    r.setPixelRatio(Math.min(devicePixelRatio, 2));
+    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1;
+    r.outputColorSpace = THREE.SRGBColorSpace;
     const scene = new THREE.Scene();
     const cam = new THREE.PerspectiveCamera(24, 0.8, 0.05, 60);
-    const key = new THREE.DirectionalLight(0xfff0dd, 3.2); key.position.set(1.4, 2.4, 3);
-    const rim = new THREE.DirectionalLight(0x88aaff, 2.6); rim.position.set(-2.5, 1.5, -2);
-    scene.add(key, rim, new THREE.HemisphereLight(0xcfdcff, 0x302018, 1.0));
-    scene.environment = this.scene.environment;
-    return { scene, cam, id: 0, inst: null };
+    const key = new THREE.DirectionalLight(0xfff0dd, 3.4); key.position.set(1.4, 2.4, 3);
+    const rim = new THREE.DirectionalLight(0x88aaff, 3.0); rim.position.set(-2.5, 1.5, -2);
+    scene.add(key, rim, new THREE.HemisphereLight(0xcfdcff, 0x302018, 1.3));
+    scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.5;
+    return { scene, cam, id: 0, inst: null, r, cv, models: null };
   }
 
   updatePortrait(dt) {
@@ -173,17 +186,11 @@ class App {
 
   renderPortrait() {
     const P = this.portrait;
-    if (!P.inst) return;
-    const r = this.hud.$.portrait.getBoundingClientRect();
-    const R = this.renderer, H = innerHeight;
-    P.cam.aspect = r.width / r.height; P.cam.updateProjectionMatrix();
-    R.setScissorTest(true);
-    R.setScissor(r.left + 3, H - r.bottom + 3, r.width - 6, r.height - 6);
-    R.setViewport(r.left + 3, H - r.bottom + 3, r.width - 6, r.height - 6);
-    R.clearDepth();
-    R.render(P.scene, P.cam);
-    R.setScissorTest(false);
-    R.setViewport(0, 0, innerWidth, innerHeight);
+    const w = P.cv.clientWidth, h = P.cv.clientHeight;
+    if (P.w !== w || P.h !== h) { P.w = w; P.h = h; P.r.setSize(w, h, false); P.cam.aspect = w / Math.max(1, h); P.cam.updateProjectionMatrix(); }
+    if (!P.inst) { if (P.drawn) { P.r.clear(); P.drawn = false; } return; }
+    P.r.render(P.scene, P.cam);
+    P.drawn = true;
   }
 
   makeIndicators() {
@@ -256,7 +263,7 @@ class App {
 
   send(cmd) {
     cmd.p = this.me;
-    if (this.net.role === 'client') this.net.sendCmd(cmd);
+    if (this.net.role) this.net.sendCmd(cmd);
     else this.world.issue(cmd);
   }
 
@@ -308,7 +315,6 @@ class App {
         case 'end': this.end(ev.result); break;
       }
     }
-    if (this.net.role === 'host') this.net.collect(w.events);
     w.events.length = 0;
   }
 
@@ -332,22 +338,20 @@ class App {
     this.last = now;
     const w = this.world;
     if (!this.paused) {
-      if (this.net.role !== 'client') {
-        this.acc += dt * (this.speed || 1);
-        let n = 0;
-        while (this.acc >= DT && n < 5) {
-          this.views.snapshot();
-          for (const a of this.allies) a?.tick();
-          w.step();
-          this.handleEvents();
-          this.acc -= DT; n++;
-        }
-        if (n === 5) this.acc = 0;
-        this.net.tick?.();
-      } else {
-        this.acc = this.net.update(dt);
+      this.acc += dt * (this.speed || 1);
+      const behind = this.net.role === 'client' ? this.net.turns.size - 4 : 0;
+      const maxSteps = behind > 2 ? 12 : 5;
+      let n = 0;
+      while (this.acc >= DT && n < maxSteps) {
+        if (!this.net.beforeStep()) { this.acc = Math.min(this.acc, DT); break; }
+        this.views.snapshot();
+        for (const a of this.allies) a?.tick();
+        w.step();
         this.handleEvents();
+        this.net.afterStep();
+        this.acc -= DT; n++;
       }
+      if (n === maxSteps) this.acc = Math.min(this.acc, DT);
     } else dt = 0;
     const alpha = Math.min(1, this.acc / DT);
     this.cam.update(dt);

@@ -70,7 +70,7 @@ CROSSINGS = [  # (kind, x, y, angle_deg)  bridges are walkable decks, fords are 
     ("bridge", -60.5, 5.0, 85), ("ford", -84.0, 8.0, 90),
     ("bridge", 62.0, 12.5, 95), ("ford", 85.0, 11.0, 90),
     ("bridge", 2.0, 55.0, 5), ("ford", 7.0, 80.0, 0),
-    ("ford", 0.0, -11.0, 0),            # south ford to the island
+    ("ford", 0.0, -6.0, 90, 19.0),      # south ford: shore to the mill island
 ]
 STARTS = [(-62, -58), (-21, -66), (21, -66), (62, -58)]
 MINES = [(-70, -44), (-30, -48), (30, -48), (70, -44), (-72, 30), (72, 34), (0, 12)]   # last = island (rich)
@@ -80,7 +80,7 @@ CAMPS = [  # (difficulty, x, y)
     ("yellow", -82, -12), ("yellow", 82, -10), ("yellow", -28, 28), ("yellow", 30, 30),
     ("red", -60, 58), ("red", 60, 60),
 ]
-PITS = [(0, 84, 0), (-40, 76, 1), (42, 78, 1), (-74, 62, 2), (76, 64, 2)]   # (x, y, opens_after_wave)
+PITS = [(-16, 84, 0), (-40, 76, 1), (42, 78, 1), (-74, 62, 2), (76, 64, 2)]   # (x, y, opens_after_wave)
 SHOALS = [(-14, -6), (14, -6), (-24, 14), (24, 18)]
 
 # --- heights ---------------------------------------------------------------
@@ -109,18 +109,18 @@ idist = np.hypot(X - ISLAND_C[0], Y - ISLAND_C[1])
 iw = 1 - smoothstep(ISLAND_R * 0.75, ISLAND_R * 1.15, idist)
 H = H * (1 - iw) + 1.1 * iw
 # crossings
-for kind, cx, cy, ang in CROSSINGS:
+for kind, cx, cy, ang, *rest in CROSSINGS:
     a = math.radians(ang)
     dx, dy = math.cos(a), math.sin(a)
     along = (X - cx) * dx + (Y - cy) * dy
     across = -(X - cx) * dy + (Y - cy) * dx
-    L = 9.0 if kind == "ford" else 8.0
+    L = rest[0] if rest else (9.0 if kind == "ford" else 8.0)
     w = (1 - smoothstep(L * 0.5, L * 0.7, np.abs(along))) * (1 - smoothstep(2.6, 3.4, np.abs(across)))
     if kind == "ford":
         H = np.where(w > 0, H * (1 - w) + (-0.25) * w, H)
 # --- walkability -------------------------------------------------------------
 walk = H > -0.45
-for kind, cx, cy, ang in CROSSINGS:
+for kind, cx, cy, ang, *rest in CROSSINGS:
     if kind == "bridge":
         a = math.radians(ang)
         dx, dy = math.cos(a), math.sin(a)
@@ -231,7 +231,7 @@ layout = {
     "shrines": [{"id": n, "x": x, "y": y} for n, x, y in SHRINES],
     "camps": [{"level": l, "x": x, "y": y} for l, x, y in CAMPS],
     "rat_pits": [{"x": x, "y": y, "opens_after_wave": o} for x, y, o in PITS],
-    "crossings": [{"kind": k, "x": x, "y": y, "angle": a} for k, x, y, a in CROSSINGS],
+    "crossings": [{"kind": c[0], "x": c[1], "y": c[2], "angle": c[3]} for c in CROSSINGS],
     "fishing_shoals": [{"x": x, "y": y} for x, y in SHOALS],
     "rivers": RIVERS, "pond": {"x": POND_C[0], "y": POND_C[1], "rx": POND_R[0], "ry": POND_R[1]},
     "island": {"x": ISLAND_C[0], "y": ISLAND_C[1], "r": ISLAND_R},
@@ -263,7 +263,7 @@ for l, x, y in CAMPS:
     cx, cy = px(x, y); d.ellipse([cx - 5, cy - 5, cx + 5, cy + 5], fill={"green": (60, 220, 60), "yellow": (240, 220, 40), "red": (230, 60, 50)}[l])
 for x, y, o in PITS:
     cx, cy = px(x, y); d.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], fill=(120, 220, 40), outline=(20, 30, 10), width=2)
-for k, x, y, a in CROSSINGS:
+for k, x, y, a, *_ in CROSSINGS:
     cx, cy = px(x, y); d.rectangle([cx - 4, cy - 4, cx + 4, cy + 4], fill=(140, 90, 40) if k == "bridge" else (200, 200, 200))
 for n, x, y in SHRINES:
     cx, cy = px(x, y); d.polygon([(cx, cy - 8), (cx + 7, cy + 5), (cx - 7, cy + 5)], fill=(150, 120, 255))

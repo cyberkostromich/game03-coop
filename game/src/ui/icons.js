@@ -128,9 +128,11 @@ export class UnitIcons {
     this.rt = new THREE.WebGLRenderTarget(S, S, { colorSpace: THREE.SRGBColorSpace });
     this.scene = new THREE.Scene();
     this.cam = new THREE.PerspectiveCamera(26, 1, 0.05, 50);
-    const key = new THREE.DirectionalLight(0xfff0dd, 3.2); key.position.set(1.5, 2.5, 3);
-    const rim = new THREE.DirectionalLight(0x99bbff, 2.2); rim.position.set(-2, 1.5, -2);
-    this.scene.add(key, rim, new THREE.HemisphereLight(0xcfdcff, 0x40302a, 1.1));
+    const key = new THREE.DirectionalLight(0xfff0dd, 5.5); key.position.set(1.5, 2.5, 3);
+    const rim = new THREE.DirectionalLight(0x99bbff, 3.5); rim.position.set(-2, 1.5, -2);
+    const fill = new THREE.DirectionalLight(0xffffff, 1.6); fill.position.set(-1, 0.5, 3);
+    this.scene.add(fill);
+    this.scene.add(key, rim, new THREE.HemisphereLight(0xcfdcff, 0x40302a, 2.2));
     this.urls = new Map();
     this.buf = new Uint8Array(S * S * 4);
   }

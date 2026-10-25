@@ -89,6 +89,13 @@ export class Fx {
     this.projMats = {};
     this.glowTex = radialTexture(64, [[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,0.45)'], [1, 'rgba(255,255,255,0)']]);
     this.discGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    // fishing shoals: shimmering rings on the water, fish jumping now and then
+    this.shoals = app.world.ents.filter(e => e.kind === 'shoal').map(e => {
+      const m = new THREE.Mesh(this.discGeo, new THREE.MeshBasicMaterial({ map: app.views.ringTex, color: 0xbfe8ff, transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending }));
+      m.scale.set(4.2, 1, 4.2); m.position.set(e.x, 0.04, -e.y); m.renderOrder = 3;
+      this.scene.add(m);
+      return { e, m, t: Math.random() * 3 };
+    });
   }
 
   h(x, y) { return this.app.world.grid.heightAt(x, y); }
@@ -290,6 +297,22 @@ export class Fx {
       if (k >= 1) { this.scene.remove(m.m); m.m.material.dispose(); return false; }
       return true;
     });
+    for (const s of this.shoals) {
+      s.t += dt;
+      const alive = s.e.alive && s.e.food > 0;
+      s.m.visible = alive;
+      if (!alive) continue;
+      s.m.material.opacity = 0.25 + 0.15 * Math.sin(s.t * 2.2);
+      s.m.rotation.y += dt * 0.2;
+      if (s.t > 2.5 + (s.e.id % 3)) {
+        s.t = 0;
+        if (this.app.fog.at(s.e.x, s.e.y) > 0.3) {
+          const a = Math.random() * 6.28, r = Math.random() * 1.5;
+          this.parts.burst(s.e.x + Math.cos(a) * r, 0.1, -s.e.y + Math.sin(a) * r, 10, { color: [0.8, 0.95, 1], speed: 1.6, up: 2, ttl: 0.6, size: 0.14, gravity: 9 });
+          this.ring(s.e.x + Math.cos(a) * r, s.e.y - Math.sin(a) * r * 0, [0.7, 0.9, 1], 1.4, 0.8);
+        }
+      }
+    }
     this.parts.update(dt);
   }
 }

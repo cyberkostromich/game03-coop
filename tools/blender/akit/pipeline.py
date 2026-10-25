@@ -161,13 +161,15 @@ def _stitch(files, out):
 # Buildings
 # ---------------------------------------------------------------------------
 
-def assemble_building(bid, textured=True, tex_size=2048):
+def assemble_building(bid, textured=True, tex_size=None):
     from . import buildings
     spec = buildings.build(bid)
+    # halls are the hero pieces; the rest read fine at 1024 and bake 4x faster
+    tex_size = tex_size or (1536 if spec.role in ("town_hall", "shrine") else 1024)
     tint = spec.team
     ob = build.parts_to_object(spec.parts, bid, team=tint)
     build.decimate_to(ob, 60000)   # buildings: few on screen, keep thin details intact
-    build.bake_ao(ob, strength=0.6, distance=0.9, samples=32)
+    build.bake_ao(ob, strength=0.6, distance=0.9, samples=20)
     if textured:
         texture.bake_textures(ob, size=tex_size, scale=2.4, team=palette.rgb(tint).tolist())
     bones = [("root", (0, 0, 0), (0, 0, 0.5), None, True)] + [

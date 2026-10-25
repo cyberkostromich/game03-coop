@@ -214,6 +214,7 @@ export class World {
 
   visibleTo(team, e) {
     if (team !== 0) return !e.mods?.invisible;
+    if (this.revealAll) return true;
     if (e.team === 0) return true;
     const i = this.grid.idx(e.x, e.y);
     if (i < 0 || !this.vis[i]) return false;
@@ -571,6 +572,7 @@ export class World {
         V.fill(1, y * n + x0, y * n + x1 + 1);
       }
     }
+    if (this.revealAll) V.fill(1);
     for (const z of this.zones) if (z.kind === 'reveal' || z.kind === 'ward') {
       g.forCells(z.x, z.y, z.r, i => { V[i] = 1; });
     }
@@ -1280,3 +1282,76 @@ function e_guard(w, t, src) {
   w.setOrder(t, { t: 'guard', target: src.id, hx: t.x, hy: t.y });
   t.orders.unshift({ t: 'move', x: t.x, y: t.y, fx: t.x, fy: t.y, gid: 0 });
 }
+
+// ------------------------------------------------------------ net support
+// State hash for lockstep desync detection, and a full snapshot used to
+// resync a peer that drifted (e.g. different JS engine maths).
+const SKIP = new Set(['def', 'mods', 'view', 'goals', 'goalsV', 'cells']);
+
+World.prototype.stateHash = function () {
+  let h = 2166136261 >>> 0;
+  const mix = v => { h ^= v | 0; h = Math.imul(h, 16777619) >>> 0; };
+  mix(this.tick);
+  for (const e of this.units) { if (!e.alive) continue; mix(e.id); mix(Math.round(e.x * 256)); mix(Math.round(e.y * 256)); mix(Math.round(e.hp * 16)); }
+  for (const b of this.blds) { mix(b.id); mix(Math.round(b.hp)); mix(b.queue.length); }
+  for (const p of this.players) { mix(Math.round(p.gold)); mix(Math.round(p.wood)); }
+  return h >>> 0;
+};
+
+World.prototype.serialize = function () {
+  const ents = [];
+  for (const e of this.ents) {
+    if (e.kind === 'tree') { ents.push({ id: e.id, kind: 'tree', alive: e.alive, wood: e.wood, deadT: e.deadT }); continue; }
+    const o = {};
+    for (const k in e) if (!SKIP.has(k)) o[k] = e[k];
+    ents.push(o);
+  }
+  const zones = this.zones.map(z => ({ ...z, hit: z.hit ? [...z.hit] : undefined }));
+  return JSON.stringify({
+    tick: this.tick, nextId: this.nextId, rng: this.rng.s, ents, zones, projectiles: this.projectiles,
+    players: this.players, explored: Array.from(this.explored), crusade: this.crusade, millHolder: this.millHolder,
+    director: { n: this.director.n, next: this.director.next, kingSlain: this.director.kingSlain, groups: this.director.groups },
+  });
+};
+
+World.prototype.restore = function (json) {
+  const S = JSON.parse(json);
+  const old = this.byId;
+  this.tick = S.tick; this.nextId = S.nextId; this.rng.s = S.rng;
+  this.players.forEach((p, i) => Object.assign(p, S.players[i]));
+  this.crusade = S.crusade; this.millHolder = S.millHolder;
+  Object.assign(this.director, S.director);
+  this.explored.set(S.explored);
+  this.projectiles = S.projectiles;
+  // rebuild entities; trees keep their static data and view handle
+  const ents = [];
+  this.byId = new Map();
+  for (const o of S.ents) {
+    let e;
+    if (o.kind === 'tree') { e = old.get(o.id); if (!e) continue; e.alive = o.alive; e.wood = o.wood; e.deadT = o.deadT; }
+    else {
+      e = o;
+      if (e.kind === 'unit') e.def = this.defs.units[e.type];
+      else if (e.kind === 'building') { e.def = this.defs.buildings[e.type]; e.cells = this.grid.rectCells(e.x, e.y, e.w, e.h); }
+      const prev = old.get(e.id);
+      if (prev && prev.cells && e.kind === 'tree') e.cells = prev.cells;
+    }
+    ents.push(e); this.byId.set(e.id, e);
+  }
+  this.ents = ents;
+  this.units = ents.filter(e => e.kind === 'unit');
+  this.blds = ents.filter(e => e.kind === 'building');
+  this.zones = S.zones.map(z => ({ ...z, hit: z.hit ? new Set(z.hit) : undefined }));
+  // grid blockers from scratch
+  const g = this.grid;
+  g.block.fill(0); g.owner.fill(-1); g.fields.clear();
+  for (const e of ents) {
+    if (!e.alive) continue;
+    if (e.kind === 'tree' && e.cells) g.stamp(e.cells, 1, e.id);
+    if (e.kind === 'building') g.stamp(e.cells, 1, e.id);
+  }
+  for (const z of this.zones) if (z.cells) g.stamp(z.cells, 1);
+  for (const u of this.units) this.abilities.refreshMods(u);
+  this.events.length = 0; this.cmds.length = 0;
+  this.updatePop(); this.updateVision();
+};

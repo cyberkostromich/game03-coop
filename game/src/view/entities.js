@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { Models, placeholder } from './models.js';
 import { ringTexture } from './textures.js';
-import { buildTrees } from './props.js';
+import { buildTrees, buildBridges, deckAt } from './props.js';
 
 const UNIT_SCALE = 1.45;
 const tmpV = new THREE.Vector3();
@@ -44,6 +44,7 @@ export class EntityViews {
     await Promise.all(jobs.map(j => j.then(() => progress(++done / jobs.length))));
     this.trees = await buildTrees(this.app, this.models);
     this.scene.add(this.trees.group);
+    this.scene.add(await buildBridges(this.app, this.models));
   }
 
   ringMat(color) {
@@ -98,6 +99,14 @@ export class EntityViews {
     this.views.delete(id);
   }
 
+  // after a network resync the world holds fresh entity objects
+  rebind() {
+    for (const [id, v] of this.views) {
+      const e = this.w.byId.get(id);
+      if (!e) this.remove(id); else v.e = e;
+    }
+  }
+
   // called right before each sim step so frames can interpolate
   snapshot() {
     for (const v of this.views.values()) { v.px = v.e.x; v.py = v.e.y; v.pf = v.e.facing; v.ph = v.e.hop || 0; }
@@ -134,7 +143,11 @@ export class EntityViews {
       f += df * alpha;
       const hop = (v.ph ?? 0) + ((e.hop || 0) - (v.ph ?? 0)) * alpha;
       let h = g.heightAt(x, y);
-      if (e.kind === 'unit' && h < this.D.map.water_level - 0.05) h = this.D.map.water_level - 0.25;  // wading through fords
+      if (e.kind === 'unit') {
+        const deck = deckAt(this.D.map, x, y);
+        if (deck > h) h = deck;
+        else if (h < this.D.map.water_level - 0.05) h = this.D.map.water_level - 0.25;  // wading through fords
+      }
       v.root.position.set(x, h + hop, -y);
       v.root.rotation.y = yaw(f);
       // visibility: fog hides enemies, mines hide workers

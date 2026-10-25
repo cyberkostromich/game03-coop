@@ -16,7 +16,7 @@ export function loadD() {
   return D;
 }
 
-if (process.argv[1].endsWith('headless.mjs')) {
+if (process.argv[1]?.endsWith('headless.mjs')) {
   const D = loadD();
   const factions = (process.argv[2] || 'cats,dogs').split(',');
   const minutes = +(process.argv[3] || 6);

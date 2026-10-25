@@ -109,6 +109,7 @@ export class Abilities {
 
   castRange(u, a) {
     if (a.type === 'no_target' || a.type === 'channel') return Infinity;
+    if (a.type === 'point' && !a.range) return 8;          // area spells placed near the caster
     return Math.max(a.range || 0, 1.2);
   }
 

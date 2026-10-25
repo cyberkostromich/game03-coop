@@ -15,7 +15,7 @@ export class AllyAI {
   get P() { return this.w.players[this.p]; }
   my(f) { return this.w.units.filter(e => e.alive && e.owner === this.p && f(e)); }
   myB(f) { return this.w.blds.filter(e => e.alive && e.owner === this.p && f(e)); }
-  cmd(c) { c.p = this.p; this.w.issue(c); }
+  cmd(c) { c.p = this.p; if (this.sink) this.sink(c); else this.w.issue(c); }
 
   tick() {
     if (!this.P.alive || this.w.result) return;

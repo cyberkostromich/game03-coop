@@ -83,6 +83,47 @@ async function propSource(app, models, id) {
   return out;
 }
 
+function fallbackBridge() {
+  const parts = [];
+  const plank = (x, w) => painted(new THREE.BoxGeometry(w, 0.16, 3.6).translate(x, 0, 0), '#a77a48', '#6a4a2a', 0.12, x * 13 + 7).toNonIndexed();
+  for (let k = -12; k <= 12; k++) parts.push(plank(k * 0.54, 0.5));
+  for (const z of [-1.75, 1.75]) {
+    parts.push(painted(new THREE.BoxGeometry(13.2, 0.14, 0.14).translate(0, 0.85, z), '#8a6238', '#5a3e22').toNonIndexed());
+    for (let k = -6; k <= 6; k += 2) parts.push(painted(new THREE.CylinderGeometry(0.09, 0.11, 2.6, 6).translate(k, -0.45, z), '#7a5432', '#3a2614').toNonIndexed());
+  }
+  for (const z of [-1.9, 1.9]) parts.push(painted(new THREE.BoxGeometry(13.4, 0.26, 0.2).translate(0, -0.08, z), '#6e4c2c', '#4a3018').toNonIndexed());
+  return mergeGeometries(parts);
+}
+
+// deck height of a bridge under (x, y), or -Infinity
+export function deckAt(map, x, y) {
+  for (const c of map.crossings) {
+    if (c.kind !== 'bridge') continue;
+    const a = c.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
+    const along = (x - c.x) * dx + (y - c.y) * dy, across = -(x - c.x) * dy + (y - c.y) * dx;
+    if (Math.abs(along) < 6.6 && Math.abs(across) < 1.9) return BRIDGE_DECK - Math.pow(Math.abs(along) / 6.6, 2) * 0.25;
+  }
+  return -Infinity;
+}
+export const BRIDGE_DECK = 0.55;
+
+export async function buildBridges(app, models) {
+  const group = new THREE.Group();
+  const mat = app.fog.patch(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }));
+  const src = await propSource(app, models, 'bridge');
+  for (const c of app.D.map.crossings) {
+    if (c.kind !== 'bridge') continue;
+    const g = new THREE.Group();
+    if (src) for (const { geo, mat: m } of src) g.add(new THREE.Mesh(geo, m));
+    else g.add(new THREE.Mesh(fallbackBridge(), mat));
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.position.set(c.x, BRIDGE_DECK - 0.08, -c.y);
+    g.rotation.y = c.angle * Math.PI / 180;
+    group.add(g);
+  }
+  return group;
+}
+
 export async function buildTrees(app, models) {
   const w = app.world, grid = w.grid, M = app.D.map;
   const group = new THREE.Group();
