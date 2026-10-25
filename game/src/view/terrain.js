@@ -123,7 +123,8 @@ function buildWater(M, heightTex, fog) {
         vec3 Hh = normalize(sunDir + V);
         col += sunCol * pow(max(dot(n, Hh), 0.0), 160.0) * 1.4 * dayLight;
         // painted shore foam
-        float foam = smoothstep(0.35, 0.0, depth) * smoothstep(0.35, 0.65, vn(vW.xz * 3.0 + time * 0.4) + (0.35 - depth));
+        float edge = smoothstep(0.16, 0.0, depth);
+        float foam = edge * smoothstep(0.45, 0.75, vn(vW.xz * 1.7 + time * 0.3) * 0.6 + edge * 0.6);
         col = mix(col, vec3(0.92, 0.96, 0.92), clamp(foam, 0.0, 1.0) * 0.85);
         col *= mix(0.35, 1.0, dayLight);
         float a = mix(0.55, 0.92, smoothstep(0.0, 1.2, depth));

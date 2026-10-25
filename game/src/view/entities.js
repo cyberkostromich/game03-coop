@@ -84,6 +84,7 @@ export class EntityViews {
       else v.root.add(placeholder('building', [e.def.w, e.def.h, Math.max(2, e.def.w * 0.8)], e.type === 'gold_mine' ? '#c8a040' : color));
       v.height = meta?.height || Math.max(2, e.def.w * 0.8);
       if (v.inst?.actions.Idle) v.inst.actions.Idle.play();
+      if (e.type === 'rat_pit' && v.inst) { v.inst.root.scale.setScalar(1.45); v.plague = true; }
     }
     v.root.position.copy(toThree(e.x, e.y, this.w.grid.heightAt(e.x, e.y)));
     v.root.rotation.y = yaw(e.facing);
@@ -153,6 +154,14 @@ export class EntityViews {
 
   update(dt, alpha) {
     const w = this.w, g = w.grid;
+    // manual culling: skinned meshes can't trust their bounds, so test a
+    // sphere per entity against the view frustum
+    const cam = this.app.camera;
+    cam.updateMatrixWorld();
+    this._pm ||= new THREE.Matrix4(); this._fr ||= new THREE.Frustum(); this._sp ||= new THREE.Sphere();
+    this._pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    this._fr.setFromProjectionMatrix(this._pm);
+    const fr = this._fr, sp = this._sp;
     for (const e of w.ents) {
       if (e.kind === 'tree' || e.kind === 'shoal') continue;
       let v = this.views.get(e.id);
@@ -175,6 +184,11 @@ export class EntityViews {
       if (vis && e.team !== 0 && e.kind === 'unit') vis = w.visibleTo(0, e) || !e.alive && v.seen;
       if (vis && e.kind === 'unit' && e.team !== 0) v.seen = true;
       if (e.kind === 'building' && e.team !== 0 && !v.revealed) { const i = g.idx(e.x, e.y); v.revealed = i >= 0 && w.explored[i]; vis = v.revealed; }
+      if (vis) {
+        sp.center.set(x, h + (v.height || 2) * 0.5, -y);
+        sp.radius = (v.height || 2) * 0.7 + (e.w || 0) * 0.6 + 1;
+        if (!fr.intersectsSphere(sp)) vis = false;
+      }
       v.root.visible = vis;
       if (v.item) { v.t += dt; v.sprite.position.y = 1.0 + Math.sin(v.t * 2.5) * 0.12; v.root.visible = e.alive && this.app.fog.at(e.x, e.y) > 0.2; continue; }
       if (e.kind === 'unit') this.updateUnit(v, e, dt);

@@ -129,11 +129,18 @@ export async function buildTrees(app, models) {
   const group = new THREE.Group();
   const fallbackMat = app.fog.patch(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, flatShading: false }));
   const sets = new Map();                    // type -> {meshes: InstancedMesh[], ids: entity ids}
+  // instanced per type and per 48 m chunk, so whole chunks get frustum-culled
   const byType = {};
-  for (const e of w.ents) if (e.kind === 'tree') (byType[e.type] ||= []).push(e);
-  const mk = async (type, list, fallback) => {
-    let src = await propSource(app, models, type);
-    if (!src) src = [{ geo: fallback(type), mat: fallbackMat }];
+  const CH = 48;
+  for (const e of w.ents) if (e.kind === 'tree') {
+    const key = e.type + ':' + Math.floor((e.x + grid.half) / CH) + ':' + Math.floor((e.y + grid.half) / CH);
+    (byType[key] ||= []).push(e);
+  }
+  const srcCache = {};
+  const mk = async (key, list, fallback) => {
+    const type = key.split(':')[0];
+    if (!(type in srcCache)) srcCache[type] = (await propSource(app, models, type)) || [{ geo: fallback(type), mat: fallbackMat }];
+    const src = srcCache[type];
     const meshes = src.map(({ geo, mat }) => {
       const im = new THREE.InstancedMesh(geo, mat, list.length);
       im.castShadow = true; im.receiveShadow = true;
@@ -145,10 +152,10 @@ export async function buildTrees(app, models) {
       p.set(e.x, h - 0.05, -e.y); q.setFromAxisAngle(UP, (e.rot || 0) * Math.PI / 180); s.setScalar(sc);
       m4.compose(p, q, s);
       for (const im of meshes) im.setMatrixAt(i, m4);
-      e.view = { type, i, x: e.x, y: e.y, h, sc, rot: (e.rot || 0) * Math.PI / 180, fall: 0, dir: 0 };
+      e.view = { type: key, i, x: e.x, y: e.y, h, sc, rot: (e.rot || 0) * Math.PI / 180, fall: 0, dir: 0 };
     });
     for (const im of meshes) { im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); group.add(im); }
-    sets.set(type, { meshes, list });
+    sets.set(key, { meshes, list });
   };
   for (const [type, list] of Object.entries(byType)) await mk(type, list, fallbackTree);
   // doodads are decoration only

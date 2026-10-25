@@ -328,6 +328,16 @@ export class Fx {
       if (k >= 1) { this.scene.remove(m.m); m.m.material.dispose(); if (m.sweep || m.wall) m.m.geometry.dispose(); return false; }
       return true;
     });
+    // rat pits breathe green plague smoke
+    this.pitT = (this.pitT || 0) + dt;
+    if (this.pitT > 0.12) {
+      this.pitT = 0;
+      for (const b of w.blds) {
+        if (b.type !== 'rat_pit' || !b.alive || this.app.fog.at(b.x, b.y) < 0.3) continue;
+        const a = Math.random() * 6.28, r = Math.random() * 1.6;
+        this.parts.emit({ x: b.x + Math.cos(a) * r, y: this.h(b.x, b.y) + 0.2, z: -b.y + Math.sin(a) * r, vx: 0, vy: 0.9 + Math.random(), vz: 0, ttl: 2.2, size: 1.1, c: [0.35, 0.9, 0.25], g: -0.2, drag: 0.4, a: 0.35, grow: 1.6 });
+      }
+    }
     for (const s of this.shoals) {
       s.t += dt;
       const alive = s.e.alive && s.e.food > 0;
