@@ -48,10 +48,46 @@ if artifact:
     head = re.search(r"<head>(.*)</head>", html, re.S).group(1)
     body = re.search(r"<body>(.*)</body>", html, re.S).group(1)
     head = re.sub(r'<meta charset="utf-8">\s*|<meta name="viewport"[^>]*>\s*', "", head)
-    page = head.strip() + "\n<style>html,body{height:100%;background:#0b0906;color-scheme:dark}:root{padding:0!important}</style>\n" + body.strip() + "\n"
+    css = open(os.path.join(ROOT, "game", "src", "ui", "style.css"), encoding="utf-8").read()
+    head = head.replace('<link rel="stylesheet" href="src/ui/style.css">', "<style>\n" + css + "\n</style>")
+    # artifact frames forbid WebRTC: the menu offers computer allies instead of network play
+    head = '<meta name="ak-net" content="off">\n<meta name="ak-pack" content="json">\n' + head
+    page = head.strip() + "\n<style>html,body{height:100%;background:#0b0906;color-scheme:dark}</style>\n" + body.strip() + "\n"
     open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(page)
 else:
     open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(html)
+
+if artifact:
+    # artifact hosting serves text and image types only: GLB -> glTF JSON +
+    # .webp textures, map binaries -> base64 inside a JSON file
+    sys.path.insert(0, os.path.dirname(__file__))
+    from glb2gltf import convert
+    import base64
+    for sub in ("units", "buildings", "props"):
+        d = os.path.join(OUT, "assets", "animal_kingdoms", sub)
+        if not os.path.isdir(d):
+            continue
+        manifest = os.path.join(d, sub + ".json")
+        meta = json.load(open(manifest)) if os.path.exists(manifest) else {}
+        for fn in sorted(os.listdir(d)):
+            if not fn.endswith(".glb"):
+                continue
+            mid = fn[:-4]
+            convert(os.path.join(d, fn), os.path.join(d, mid + ".gltf.json"), mid + "_tex")
+            os.remove(os.path.join(d, fn))
+            if mid in meta:
+                meta[mid]["file"] = mid + ".gltf.json"
+        if meta:
+            json.dump(meta, open(manifest, "w"), ensure_ascii=False)
+    md = os.path.join(OUT, "assets", "animal_kingdoms", "maps")
+    for fn in sorted(os.listdir(md)):
+        if fn.endswith("_height.bin"):
+            name = fn[:-len("_height.bin")]
+            pack = {k: base64.b64encode(open(os.path.join(md, f"{name}_{k}.bin"), "rb").read()).decode() for k in ("height", "path")}
+            json.dump(pack, open(os.path.join(md, name + "_bins.json"), "w"))
+    for fn in os.listdir(md):
+        if fn.endswith(".bin"):
+            os.remove(os.path.join(md, fn))
 
 files = []
 for d, _, fs in os.walk(OUT):

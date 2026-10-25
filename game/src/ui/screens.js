@@ -22,7 +22,8 @@ export function showMenu(app, onStart) {
   const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
   const st = { faction: get('ak.faction', 'cats'), allies: +get('ak.allies', 1), diff: get('ak.diff', 'normal'), name: get('ak.name', 'Игрок') };
   app.menuState = st;
-  const rtc = typeof RTCPeerConnection !== 'undefined' || new URLSearchParams(location.search).has('local');
+  const netOff = document.querySelector('meta[name="ak-net"]')?.content === 'off';
+  const rtc = !netOff && (typeof RTCPeerConnection !== 'undefined' || new URLSearchParams(location.search).has('local'));
   const d = screen('menuScreen', `
     <div class="card frame">
       <div class="gem" style="left:-9px;top:-9px"></div><div class="gem" style="right:-9px;top:-9px"></div>

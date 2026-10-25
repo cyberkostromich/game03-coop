@@ -24,8 +24,15 @@ export async function loadData(progress = () => {}) {
   await Promise.all(names.map(async n => { D[n] = await json(DATA + n + '.json'); }));
   progress(0.05);
   D.map = await json(DATA + 'maps/mill_pond.json');
-  const [h, p] = await Promise.all([bin(ASSETS + 'maps/mill_pond_height.bin'), bin(ASSETS + 'maps/mill_pond_path.bin')]);
-  D.mapBin = { height: new Uint16Array(h), path: new Uint8Array(p) };
+  if (document.querySelector('meta[name="ak-pack"]')?.content === 'json') {
+    // packed build: binaries travel as base64 inside JSON
+    const pk = await json(ASSETS + 'maps/mill_pond_bins.json');
+    const dec = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    D.mapBin = { height: new Uint16Array(dec(pk.height).buffer), path: dec(pk.path) };
+  } else {
+    const [h, p] = await Promise.all([bin(ASSETS + 'maps/mill_pond_height.bin'), bin(ASSETS + 'maps/mill_pond_path.bin')]);
+    D.mapBin = { height: new Uint16Array(h), path: new Uint8Array(p) };
+  }
   const [ua, ba, pa] = await Promise.all([
     json(ASSETS + 'units/units.json').catch(() => ({})),
     json(ASSETS + 'buildings/buildings.json').catch(() => ({})),
