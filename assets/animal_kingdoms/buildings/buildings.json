@@ -1,0 +1,401 @@
+{
+ "cat_barracks": {
+  "id": "cat_barracks",
+  "faction": "cats",
+  "name": "Кошачья казарма",
+  "role": "barracks",
+  "footprint": [
+   4.5,
+   3.5
+  ],
+  "tris": 15570,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2b3f8f",
+  "height": 4.887,
+  "file": "cat_barracks.glb"
+ },
+ "cat_farm": {
+  "id": "cat_farm",
+  "faction": "cats",
+  "name": "Рыбацкая хижина",
+  "role": "farm",
+  "footprint": [
+   3.0,
+   3.0
+  ],
+  "tris": 8906,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2b3f8f",
+  "height": 3.67,
+  "file": "cat_farm.glb"
+ },
+ "cat_hall": {
+  "id": "cat_hall",
+  "faction": "cats",
+  "name": "Кошачий замок",
+  "role": "town_hall",
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "tris": 31716,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2b3f8f",
+  "height": 7.67,
+  "file": "cat_hall.glb"
+ },
+ "cat_tower": {
+  "id": "cat_tower",
+  "faction": "cats",
+  "name": "Кошачий насест",
+  "role": "tower",
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "tris": 4818,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2b3f8f",
+  "height": 6.47,
+  "file": "cat_tower.glb"
+ },
+ "dog_barracks": {
+  "id": "dog_barracks",
+  "faction": "dogs",
+  "name": "Казарма стаи",
+  "role": "barracks",
+  "footprint": [
+   4.5,
+   3.5
+  ],
+  "tris": 12214,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2f6b3a",
+  "height": 4.276,
+  "file": "dog_barracks.glb"
+ },
+ "dog_farm": {
+  "id": "dog_farm",
+  "faction": "dogs",
+  "name": "Псарня и кухня",
+  "role": "farm",
+  "footprint": [
+   3.0,
+   3.0
+  ],
+  "tris": 8768,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2f6b3a",
+  "height": 3.26,
+  "file": "dog_farm.glb"
+ },
+ "dog_hall": {
+  "id": "dog_hall",
+  "faction": "dogs",
+  "name": "Псарный замок",
+  "role": "town_hall",
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "tris": 39196,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2f6b3a",
+  "height": 6.019,
+  "file": "dog_hall.glb"
+ },
+ "dog_tower": {
+  "id": "dog_tower",
+  "faction": "dogs",
+  "name": "Сторожевая будка",
+  "role": "tower",
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "tris": 12860,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#2f6b3a",
+  "height": 5.183,
+  "file": "dog_tower.glb"
+ },
+ "gold_mine": {
+  "id": "gold_mine",
+  "faction": "neutral",
+  "name": "Золотой рудник",
+  "role": "gold_mine",
+  "footprint": [
+   4.5,
+   4.0
+  ],
+  "tris": 3108,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#8a7a5a",
+  "height": 2.991,
+  "file": "gold_mine.glb"
+ },
+ "ham_barracks": {
+  "id": "ham_barracks",
+  "faction": "hamsters",
+  "name": "Нора ополчения",
+  "role": "barracks",
+  "footprint": [
+   4.0,
+   3.5
+  ],
+  "tris": 3940,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#c0592f",
+  "height": 3.07,
+  "file": "ham_barracks.glb"
+ },
+ "ham_farm": {
+  "id": "ham_farm",
+  "faction": "hamsters",
+  "name": "Семечковое поле",
+  "role": "farm",
+  "footprint": [
+   3.5,
+   3.0
+  ],
+  "tris": 14298,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#c0592f",
+  "height": 1.587,
+  "file": "ham_farm.glb"
+ },
+ "ham_hall": {
+  "id": "ham_hall",
+  "faction": "hamsters",
+  "name": "Кладовая",
+  "role": "town_hall",
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "tris": 10786,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#c0592f",
+  "height": 3.97,
+  "file": "ham_hall.glb"
+ },
+ "ham_tower": {
+  "id": "ham_tower",
+  "faction": "hamsters",
+  "name": "Нора-бункер",
+  "role": "tower",
+  "footprint": [
+   2.2,
+   2.2
+  ],
+  "tris": 2370,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#c0592f",
+  "height": 3.07,
+  "file": "ham_tower.glb"
+ },
+ "hare_barracks": {
+  "id": "hare_barracks",
+  "faction": "hares",
+  "name": "Дружинная изба",
+  "role": "barracks",
+  "footprint": [
+   4.0,
+   3.5
+  ],
+  "tris": 8718,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#a3243b",
+  "height": 4.59,
+  "file": "hare_barracks.glb"
+ },
+ "hare_farm": {
+  "id": "hare_farm",
+  "faction": "hares",
+  "name": "Огород с морковью",
+  "role": "farm",
+  "footprint": [
+   3.5,
+   3.0
+  ],
+  "tris": 5148,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#a3243b",
+  "height": 1.628,
+  "file": "hare_farm.glb"
+ },
+ "hare_hall": {
+  "id": "hare_hall",
+  "faction": "hares",
+  "name": "Терем",
+  "role": "town_hall",
+  "footprint": [
+   5.5,
+   5.0
+  ],
+  "tris": 10856,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#a3243b",
+  "height": 5.99,
+  "file": "hare_hall.glb"
+ },
+ "hare_tower": {
+  "id": "hare_tower",
+  "faction": "hares",
+  "name": "Смотровая кочка",
+  "role": "tower",
+  "footprint": [
+   2.0,
+   2.0
+  ],
+  "tris": 1854,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#a3243b",
+  "height": 5.25,
+  "file": "hare_tower.glb"
+ },
+ "mill": {
+  "id": "mill",
+  "faction": "neutral",
+  "name": "Старая мельница",
+  "role": "shrine",
+  "footprint": [
+   4.0,
+   4.0
+  ],
+  "tris": 11002,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#8a7a5a",
+  "height": 4.97,
+  "file": "mill.glb"
+ },
+ "rat_pit": {
+  "id": "rat_pit",
+  "faction": "rats",
+  "name": "Провал Крысиной Чумы",
+  "role": "spawner",
+  "footprint": [
+   4.0,
+   4.0
+  ],
+  "tris": 2020,
+  "clips": {
+   "Idle": {
+    "frames": 90,
+    "seconds": 3.0,
+    "loop": true
+   }
+  },
+  "team_default": "#6f8a2a",
+  "height": 1.041,
+  "file": "rat_pit.glb"
+ }
+}

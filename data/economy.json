@@ -1,0 +1,71 @@
+{
+ "_doc": "GDD section 3. Upkeep tiers reduce gold income as population grows.",
+ "start": {
+  "gold": 500,
+  "wood": 200,
+  "food": 150,
+  "workers": 5
+ },
+ "pop_cap": 100,
+ "upkeep": [
+  {
+   "max_pop": 50,
+   "gold_rate": 1.0
+  },
+  {
+   "max_pop": 80,
+   "gold_rate": 0.7
+  },
+  {
+   "max_pop": 100,
+   "gold_rate": 0.4
+  }
+ ],
+ "gather": {
+  "gold": {
+   "per_trip": 10,
+   "seconds": 1.6,
+   "max_workers": 5
+  },
+  "wood": {
+   "per_trip": 10,
+   "seconds": 3.5
+  },
+  "food": {
+   "per_trip": 8,
+   "seconds": 3.0
+  }
+ },
+ "gold_mine_amount": 12500,
+ "transfer_tax": 0.1,
+ "royal_treasury_goal": 6000,
+ "heroes": {
+  "_doc": "WC3-style: XP to reach level i+1; kills share XP among heroes in range.",
+  "xp_levels": [
+   0,
+   200,
+   500,
+   900,
+   1400,
+   2000,
+   2700,
+   3500,
+   4400,
+   5400
+  ],
+  "kill_xp_per_pop": 18,
+  "hero_kill_xp": 120,
+  "creep_xp_mult": 1.25,
+  "xp_radius": 12,
+  "max_heroes": 3,
+  "revive_cost_mult": 0.5,
+  "revive_time": 30
+ },
+ "bounty": {
+  "creep_gold_per_pop": 6
+ },
+ "trees": {
+  "wood": 50,
+  "block_radius": 1.25
+ }
+}

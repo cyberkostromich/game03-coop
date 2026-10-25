@@ -1,0 +1,86 @@
+{
+ "oak": {
+  "id": "oak",
+  "tris": 1654,
+  "height": 6.8,
+  "file": "oak.glb"
+ },
+ "oak_b": {
+  "id": "oak_b",
+  "tris": 1654,
+  "height": 5.83,
+  "file": "oak_b.glb"
+ },
+ "pine": {
+  "id": "pine",
+  "tris": 928,
+  "height": 7.11,
+  "file": "pine.glb"
+ },
+ "pine_b": {
+  "id": "pine_b",
+  "tris": 928,
+  "height": 7.82,
+  "file": "pine_b.glb"
+ },
+ "birch": {
+  "id": "birch",
+  "tris": 974,
+  "height": 5.73,
+  "file": "birch.glb"
+ },
+ "bush": {
+  "id": "bush",
+  "tris": 672,
+  "height": 0.75,
+  "file": "bush.glb"
+ },
+ "rocks": {
+  "id": "rocks",
+  "tris": 324,
+  "height": 0.77,
+  "file": "rocks.glb"
+ },
+ "reeds": {
+  "id": "reeds",
+  "tris": 324,
+  "height": 1.49,
+  "file": "reeds.glb"
+ },
+ "lily": {
+  "id": "lily",
+  "tris": 200,
+  "height": 0.15,
+  "file": "lily.glb"
+ },
+ "flowers": {
+  "id": "flowers",
+  "tris": 600,
+  "height": 0.32,
+  "file": "flowers.glb"
+ },
+ "mushrooms": {
+  "id": "mushrooms",
+  "tris": 272,
+  "height": 0.42,
+  "file": "mushrooms.glb"
+ },
+ "bridge": {
+  "id": "bridge",
+  "tris": 4744,
+  "height": 1.82,
+  "file": "bridge.glb"
+ },
+ "ford": {
+  "id": "ford",
+  "tris": 1080,
+  "height": 0.42,
+  "file": "ford.glb"
+ },
+ "camp": {
+  "id": "camp",
+  "tris": 1180,
+  "height": 2.1,
+  "file": "camp.glb"
+ }
+}

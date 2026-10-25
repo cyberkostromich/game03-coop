@@ -1,0 +1,38 @@
+{
+ "_doc": "Neutral camps (GDD 6): units guard their post, leash back after 14 m, drop gold bounty.",
+ "leash": 14,
+ "aggro": 7,
+ "camps": {
+  "green": [
+   [
+    "rat_raider",
+    2
+   ]
+  ],
+  "yellow": [
+   [
+    "rat_raider",
+    3
+   ],
+   [
+    "rat_plague_doctor",
+    1
+   ]
+  ],
+  "red": [
+   [
+    "rat_raider",
+    4
+   ],
+   [
+    "rat_plague_doctor",
+    2
+   ]
+  ]
+ },
+ "scale": {
+  "green": 1.0,
+  "yellow": 1.15,
+  "red": 1.35
+ }
+}

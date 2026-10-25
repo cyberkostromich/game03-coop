@@ -1,0 +1,38 @@
+{
+ "_doc": "Co-op 'Defense of the Kingdom': rat waves from the pits. +35% strength per extra player.",
+ "interval": 240,
+ "first": 180,
+ "per_player_scale": 0.35,
+ "difficulty": {
+  "easy": 0.7,
+  "normal": 1.0,
+  "ruthless": 1.4
+ },
+ "waves": [
+  {
+   "raiders": 5,
+   "doctors": 0
+  },
+  {
+   "raiders": 8,
+   "doctors": 1
+  },
+  {
+   "raiders": 11,
+   "doctors": 1
+  },
+  {
+   "raiders": 14,
+   "doctors": 2
+  },
+  {
+   "raiders": 17,
+   "doctors": 3
+  },
+  {
+   "raiders": 20,
+   "doctors": 4,
+   "king": true
+  }
+ ]
+}
