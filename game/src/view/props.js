@@ -86,7 +86,7 @@ async function propSource(app, models, id) {
 function fallbackBridge() {
   const parts = [];
   const plank = (x, w) => painted(new THREE.BoxGeometry(w, 0.16, 3.6).translate(x, 0, 0), '#a77a48', '#6a4a2a', 0.12, x * 13 + 7).toNonIndexed();
-  for (let k = -12; k <= 12; k++) parts.push(plank(k * 0.54, 0.5));
+  for (let k = -12; k <= 12; k++) parts.push(plank(k * 0.54, 0.5).translate(0, 0.3 + 0.55 * Math.cos(Math.PI * k * 0.54 / 13), 0));
   for (const z of [-1.75, 1.75]) {
     parts.push(painted(new THREE.BoxGeometry(13.2, 0.14, 0.14).translate(0, 0.85, z), '#8a6238', '#5a3e22').toNonIndexed());
     for (let k = -6; k <= 6; k += 2) parts.push(painted(new THREE.CylinderGeometry(0.09, 0.11, 2.6, 6).translate(k, -0.45, z), '#7a5432', '#3a2614').toNonIndexed());
@@ -101,11 +101,11 @@ export function deckAt(map, x, y) {
     if (c.kind !== 'bridge') continue;
     const a = c.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
     const along = (x - c.x) * dx + (y - c.y) * dy, across = -(x - c.x) * dy + (y - c.y) * dx;
-    if (Math.abs(along) < 6.6 && Math.abs(across) < 1.9) return BRIDGE_DECK - Math.pow(Math.abs(along) / 6.6, 2) * 0.25;
+    if (Math.abs(along) < 6.6 && Math.abs(across) < 1.9) return BRIDGE_DECK + 0.55 * Math.cos(Math.PI * Math.min(6.5, Math.abs(along)) / 13);
   }
   return -Infinity;
 }
-export const BRIDGE_DECK = 0.55;
+export const BRIDGE_DECK = 0.36;     // deck top at the abutments; the span arches 0.55 m higher (matches props.bridge)
 
 export async function buildBridges(app, models) {
   const group = new THREE.Group();
@@ -117,7 +117,7 @@ export async function buildBridges(app, models) {
     if (src) for (const { geo, mat: m } of src) g.add(new THREE.Mesh(geo, m));
     else g.add(new THREE.Mesh(fallbackBridge(), mat));
     g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    g.position.set(c.x, BRIDGE_DECK - 0.08, -c.y);
+    g.position.set(c.x, 0, -c.y);
     g.rotation.y = c.angle * Math.PI / 180;
     group.add(g);
   }
@@ -133,7 +133,8 @@ export async function buildTrees(app, models) {
   const byType = {};
   const CH = 48;
   for (const e of w.ents) if (e.kind === 'tree') {
-    const key = e.type + ':' + Math.floor((e.x + grid.half) / CH) + ':' + Math.floor((e.y + grid.half) / CH);
+    const variant = app.D.propAssets?.[e.type + '_b'] && (e.id * 2654435761 >>> 0) % 2 ? e.type + '_b' : e.type;
+    const key = variant + ':' + Math.floor((e.x + grid.half) / CH) + ':' + Math.floor((e.y + grid.half) / CH);
     (byType[key] ||= []).push(e);
   }
   const srcCache = {};
@@ -148,7 +149,7 @@ export async function buildTrees(app, models) {
     });
     list.forEach((e, i) => {
       const h = grid.heightAt(e.x, e.y);
-      const sc = (e.scale || 1) * (type === 'pine' ? 1.15 : 1);
+      const sc = (e.scale || 1) * (type.startsWith('pine') ? 1.0 : 0.9);
       p.set(e.x, h - 0.05, -e.y); q.setFromAxisAngle(UP, (e.rot || 0) * Math.PI / 180); s.setScalar(sc);
       m4.compose(p, q, s);
       for (const im of meshes) im.setMatrixAt(i, m4);
