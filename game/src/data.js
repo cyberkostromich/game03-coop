@@ -19,7 +19,7 @@ async function bin(url) {
 }
 
 export async function loadData(progress = () => {}) {
-  const names = ['units', 'buildings', 'heroes', 'factions', 'damage_matrix', 'economy', 'waves', 'creeps'];
+  const names = ['units', 'buildings', 'heroes', 'factions', 'damage_matrix', 'economy', 'waves', 'creeps', 'items'];
   const D = {};
   await Promise.all(names.map(async n => { D[n] = await json(DATA + n + '.json'); }));
   progress(0.05);

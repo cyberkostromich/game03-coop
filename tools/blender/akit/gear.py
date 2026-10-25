@@ -92,14 +92,18 @@ def band(b, z, color, mat="cloth", thick=0.018, inflate=1.1, segs=18, bone=None,
 
 
 _NOT_TORSO = ("weapon", "shield", "fur.arms", "gauntlet", "vambrace", "couter", "fur.legs", "fur.tail",
-              "cape", "sabaton", "greave", "poleyn", "cuisse", "fur.head", "fur.ears", "hat", "helm", "pauldron")
+              "cape", "sabaton", "greave", "poleyn", "cuisse", "fur.head", "fur.ears", "hat", "helm", "pauldron",
+              "backpack", "quiver", "medal", "belt", "pouch")
 
 
-def fit_r(b, parts, z, floor="cloth", band=0.02):
-    """Snug radius at height z over whatever is already worn there: a belt
-    sits on the outermost torso layer instead of a fixed armour layer."""
+def fit_profile(b, parts, z, n=36, band=0.04):
+    """Outer radius of whatever is worn around height z, per azimuth bin
+    (bin k spans angle 2*pi*k/n). Back-packs, weapons and limbs are ignored,
+    so a belt wraps the body and its clothes, not the gear hanging off it."""
     from .armor import layer_r
-    rx, ry = layer_r(b, z, floor)
+    rx, ry = layer_r(b, z, "cloth")
+    ang = 2 * math.pi * np.arange(n) / n
+    R = 1.0 / np.sqrt((np.cos(ang) / rx) ** 2 + (np.sin(ang) / ry) ** 2)
     for p in parts or ():
         g = p.group or ""
         if g.startswith(_NOT_TORSO):
@@ -107,30 +111,110 @@ def fit_r(b, parts, z, floor="cloth", band=0.02):
         m = np.abs(p.V[:, 2] - z) < band
         if not m.any():
             continue
-        rx = max(rx, float(np.abs(p.V[m, 0]).max()))
-        ry = max(ry, float(np.abs(p.V[m, 1]).max()))
-    return rx, ry
+        x, y = p.V[m, 0], p.V[m, 1]
+        k = np.round(np.arctan2(y, x) / (2 * math.pi) * n).astype(int) % n
+        np.maximum.at(R, k, np.hypot(x, y))
+    # close gaps between bins, then soften so the strap reads as one curve
+    R = np.maximum(R, np.maximum(np.roll(R, 1), np.roll(R, -1)))
+    R = (np.roll(R, 1) + 2 * R + np.roll(R, -1)) / 4
+    return R
+
+
+def fit_r(b, parts, z, floor="cloth", band=0.02):
+    """Snug ellipse radii at height z over whatever is worn there."""
+    R = fit_profile(b, parts, z, band=band)
+    n = len(R)
+    return float(max(R[0], R[n // 2])), float(max(R[n // 4], R[3 * n // 4]))
+
+
+def _warp_ring(p, R, centre=1.0):
+    """Push a band built at radius `centre` onto a per-angle radius profile."""
+    n = len(R)
+    a = np.arctan2(p.V[:, 1], p.V[:, 0])
+    t = (a / (2 * math.pi) * n) % n
+    i0 = np.floor(t).astype(int) % n
+    f = t - np.floor(t)
+    r_at = R[i0] * (1 - f) + R[(i0 + 1) % n] * f
+    rho = np.hypot(p.V[:, 0], p.V[:, 1])
+    new = r_at + (rho - centre)
+    p.V[:, 0] *= new / np.maximum(rho, 1e-9)
+    p.V[:, 1] *= new / np.maximum(rho, 1e-9)
+
+
+def inherit_weights(target, parts, z, band=0.06):
+    """Skin `target` like the nearest worn torso surface around height z, so a
+    belt bends and twists with the cloth or plate it sits on."""
+    srcV, srcW = [], []
+    for p in parts or ():
+        g = p.group or ""
+        if g.startswith(_NOT_TORSO):
+            continue
+        m = np.abs(p.V[:, 2] - z) < band
+        if not m.any():
+            continue
+        idx = np.nonzero(m)[0]
+        srcV.append(p.V[idx])
+        if p.weights:
+            srcW += [{bn: float(w[i]) for bn, w in p.weights.items() if w[i] > 1e-4} for i in idx]
+        else:
+            srcW += [{p.bone or "hips": 1.0}] * len(idx)
+    if not srcV:
+        return
+    S = np.concatenate(srcV)
+    # only the outer shell: inner layers (fur under a shirt) skin differently
+    rho = np.hypot(S[:, 0], S[:, 1])
+    ang = np.arctan2(S[:, 1], S[:, 0])
+    k = np.round(ang / (2 * math.pi) * 24).astype(int) % 24
+    outer = np.zeros(24)
+    np.maximum.at(outer, k, rho)
+    keep = rho >= outer[k] * 0.9
+    S = S[keep]
+    srcW = [w for w, kp in zip(srcW, keep) if kp]
+    d = ((target.V[:, None, :] - S[None, :, :]) ** 2).sum(-1)
+    near = d.argmin(1)
+    bones = sorted({bn for w in srcW for bn in w})
+    W = {bn: np.zeros(len(target.V)) for bn in bones}
+    for i, j in enumerate(near):
+        for bn, w in srcW[j].items():
+            W[bn][i] = w
+    target.weights = W
+    target.bone = None
+
+
+def profile_at(R, angle):
+    n = len(R)
+    t = (angle / (2 * math.pi) * n) % n
+    i0 = int(math.floor(t)) % n
+    f = t - math.floor(t)
+    return float(R[i0] * (1 - f) + R[(i0 + 1) % n] * f)
 
 
 @tagged("belt")
 def belt(b, leather, buckle=palette.GOLD, z=None, pouch=None, fit=None):
-    """Belt hugging the outermost layer at its height (or the 'belt' layer)."""
+    """Belt hugging the outermost worn layer at its height (or the 'belt' layer)."""
     z = b.hip_h + 0.065 if z is None else z
     from .armor import layer_r
     if fit is not None:
-        lrx, lry = fit_r(b, fit, z)
-        lrx, lry = lrx + 0.013, lry + 0.013
+        R = fit_profile(b, fit, z) + 0.017
+        strap = band(b, z, leather, "body", thick=0.03, inflate=1.0, add=0.0, radius=(1.0, 1.0), segs=36)
+        _warp_ring(strap, R)
+        inherit_weights(strap, fit, z)
+        r_at = lambda a: profile_at(R, a)
     else:
         lrx, lry = layer_r(b, z, "belt")
-    out = [band(b, z, leather, "body", thick=0.03, inflate=1.0, add=0.0, radius=(lrx, lry))]
-    out[0].fit = (lrx, lry)
-    ry = lry + 0.016
-    bk = geo.rbox(0.05, 0.02, 0.042, 0.006, color=buckle).tf((0, -ry, z))
+        strap = band(b, z, leather, "body", thick=0.03, inflate=1.0, add=0.0, radius=(lrx, lry))
+        r_at = lambda a: 1.0 / math.sqrt((math.cos(a) / lrx) ** 2 + (math.sin(a) / lry) ** 2)
+    front = r_at(-math.pi / 2)
+    strap.fit = (r_at(0.0), front)
+    out = [strap]
+    bk = geo.rbox(0.05, 0.02, 0.042, 0.006, color=buckle).tf((0, -(front + 0.016), z))
     out.append(bk.on("hips", "metal"))
     if pouch:
-        rx = lrx
-        pc = geo.rbox(0.06, 0.04, 0.07, 0.015, color=pouch).tf((rx * 0.78, -ry * 0.68, z - 0.05),
+        a = math.radians(-40)
+        rp = r_at(a) + 0.02
+        pc = geo.rbox(0.06, 0.04, 0.07, 0.015, color=pouch).tf((rp * math.cos(a), rp * math.sin(a), z - 0.05),
                                                                  rot=(0, 0, 30))
+        pc.group = "pouch"
         out.append(pc.on("hips"))
     return out
 

@@ -285,6 +285,7 @@ export class World {
         return;
       }
       case 'revive': return this.cmdRevive(P, c);
+      case 'useitem': { const u = this.byId.get(c.id); if (this.owns(c.p, u)) this.useItem(u, c.slot); return; }
       case 'transfer': return this.cmdTransfer(P, c);
       case 'crusade': return this.cmdCrusade(P);
       case 'cheat': if (c.gold) { P.gold += c.gold; P.wood += c.wood || 0; P.food += c.food || 0; } return;
@@ -296,7 +297,8 @@ export class World {
     if (t && t.alive) {
       const groupTarget = [];
       for (const u of units) {
-        if (u.def.gatherer && (t.type === 'gold_mine' || t.kind === 'tree' || t.kind === 'shoal')) this.order(u, this.gatherOrder(u, t), c.queue);
+        if (t.kind === 'item') { if (u.def.hero) this.order(u, { t: 'pickup', target: t.id }, c.queue); else groupTarget.push(u); }
+        else if (u.def.gatherer && (t.type === 'gold_mine' || t.kind === 'tree' || t.kind === 'shoal')) this.order(u, this.gatherOrder(u, t), c.queue);
         else if (u.def.gatherer && t.kind === 'building' && t.owner === u.owner && t.built < 1) this.order(u, { t: 'construct', target: t.id }, c.queue);
         else if (u.def.gatherer && t.kind === 'building' && t.owner === u.owner && t.def.dropoff.length && u.carry.amt > 0)
           this.order(u, { t: 'gather', target: u.lastRes || 0, phase: 'return', drop: t.id }, c.queue);
@@ -635,6 +637,7 @@ export class World {
       case 'cast': this.abilities.castTick(e, o); break;
       case 'leap': this.abilities.leapTick(e, o); break;
       case 'guard': this.guardTick(e, o); break;
+      case 'pickup': this.pickupTick(e, o); break;
       case 'creep': {
         const t = this.byId.get(o.target), c = e.camp;
         if (!c || !this.canTarget(e, t) || Math.hypot(e.x - c.x, e.y - c.y) > this.D.creeps.leash) { this.setOrder(e, { t: 'idle' }); break; }
@@ -763,7 +766,7 @@ export class World {
     if (!t || !t.alive) return;
     const d = this.def(e);
     if (this.gap(e, t) > d.range + 1.0) return;
-    let amt = (this.rng.int(d.dmg[0], d.dmg[1]) + (e.dmgBonus || 0)) * e.mods.dmg;
+    let amt = (this.rng.int(d.dmg[0], d.dmg[1]) + (e.dmgBonus || 0) + (e.mods.dmgFlat || 0)) * e.mods.dmg;
     if (e.firstStrike) { amt *= e.firstStrike; e.firstStrike = 0; }
     if (d.projectile) {
       this.projectiles.push({ id: this.nextId++, src: e.id, owner: e.owner, team: e.team, target: t.id, x: e.x, y: e.y,
@@ -860,6 +863,7 @@ export class World {
       }
       if (src && this.players[src.owner]) this.players[src.owner].stats.kills++;
       if (src && src.team !== e.team && !e.summoned) this.abilities.grantXp(e, src);
+      if (e.camp && !this.units.some(u => u.alive && u.camp && u.camp.x === e.camp.x && u.camp.y === e.camp.y)) this.dropLoot(e.camp, e.x, e.y);
       if (e.camp && src && this.players[src.owner]) {
         const g = Math.round(this.D.economy.bounty.creep_gold_per_pop * (e.def.pop + 1) * (this.D.creeps.scale[e.camp.level] || 1));
         this.players[src.owner].gold += g;
@@ -875,6 +879,60 @@ export class World {
     }
     if (!silent) this.event({ k: 'death', id: e.id, kind: e.kind });
     this.updatePop();
+  }
+
+  // ------------------------------------------------------------------ items
+  dropLoot(camp, x, y) {
+    const table = this.D.items.drops[camp.level] || [];
+    let r = this.rng.next();
+    for (const [type, p] of table) {
+      if (r < p) { this.dropItem(type, x, y); return; }
+      r -= p;
+    }
+  }
+
+  dropItem(type, x, y) {
+    const p = this.grid.nearestFree(x, y, 6) || [x, y];
+    const it = this.add({ kind: 'item', type, owner: NEUTRAL, x: p[0], y: p[1], r: 0.35, hp: 1, maxHp: 1, charges: this.D.items.items[type].charges || 0 });
+    this.event({ k: 'spawn', id: it.id });
+    return it;
+  }
+
+  pickupTick(e, o) {
+    const it = this.byId.get(o.target);
+    if (!it || !it.alive) { this.nextOrder(e); return; }
+    if (Math.hypot(it.x - e.x, it.y - e.y) > 1.0) {
+      if (this.moveTo(e, it.x, it.y, 0.6, { fx: it.x, fy: it.y })) this.nextOrder(e); else this.anim(e, 'Walk');
+      return;
+    }
+    const def = this.D.items.items[it.type];
+    if (def.instant?.xp) {
+      e.xp += def.instant.xp;
+      while (e.level < e.def.maxLevel && e.xp >= this.abilities.xpFor(e.level)) this.abilities.levelUp(e);
+    } else {
+      const slot = e.items.findIndex(s => !s);
+      if (slot < 0 && e.items.length >= 6) { this.msg(e.owner, 'Инвентарь полон', 'error'); this.nextOrder(e); return; }
+      const rec = { type: it.type, charges: it.charges };
+      if (slot >= 0) e.items[slot] = rec; else e.items.push(rec);
+    }
+    it.alive = false; it.deadT = this.tick;
+    this.event({ k: 'pickup', id: e.id, item: it.id, type: it.type, p: e.owner });
+    this.event({ k: 'remove', id: it.id });
+    this.abilities.refreshMods(e);
+    this.nextOrder(e);
+  }
+
+  useItem(e, slot) {
+    const rec = e.items?.[slot];
+    if (!rec || !e.alive) return;
+    const def = this.D.items.items[rec.type];
+    if (!def.use) return;
+    const u = def.use;
+    if (u.heal) e.hp = Math.min(e.maxHp, e.hp + u.heal);
+    if (u.mana) e.mana = Math.min(e.maxMana, e.mana + u.mana);
+    if (u.heal_area) this.query(e.x, e.y, u.radius || 6, a => { if (a.team === e.team) a.hp = Math.min(a.maxHp, a.hp + u.heal_area); });
+    this.event({ k: 'fx', fx: u.mana ? 'summon' : 'heal', id: e.id, x: e.x, y: e.y });
+    if (--rec.charges <= 0) e.items[slot] = null;
   }
 
   cleanup() {

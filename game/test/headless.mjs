@@ -8,7 +8,7 @@ const ROOT = new URL('../../', import.meta.url).pathname;
 const J = p => JSON.parse(fs.readFileSync(ROOT + p, 'utf8'));
 export function loadD() {
   const D = {};
-  for (const n of ['units', 'buildings', 'heroes', 'factions', 'damage_matrix', 'economy', 'waves', 'creeps']) D[n] = J(`data/${n}.json`);
+  for (const n of ['units', 'buildings', 'heroes', 'factions', 'damage_matrix', 'economy', 'waves', 'creeps', 'items']) D[n] = J(`data/${n}.json`);
   D.map = J('data/maps/mill_pond.json');
   const h = fs.readFileSync(ROOT + 'assets/animal_kingdoms/maps/mill_pond_height.bin');
   const p = fs.readFileSync(ROOT + 'assets/animal_kingdoms/maps/mill_pond_path.bin');

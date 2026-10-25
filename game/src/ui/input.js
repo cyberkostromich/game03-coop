@@ -65,6 +65,8 @@ export class Input {
     return this.w.nearest(g.x, g.y, e => e.kind === 'tree' && e.alive, 1.6);
   }
 
+  pickItem(g) { return g ? this.w.nearest(g.x, g.y, e => e.kind === 'item' && e.alive, 1.4) : null; }
+
   pickShoal(g) { return g ? this.w.nearest(g.x, g.y, e => e.kind === 'shoal' && e.alive, 3) : null; }
 
   setMode(m) {
@@ -152,6 +154,7 @@ export class Input {
       return;
     }
     let t = gOverride ? null : this.pick(sx, sy);
+    if (!t) t = this.pickItem(g);
     if (!t && units.some(u => u.def.gatherer)) t = this.pickTree(g) || this.pickShoal(g);
     app.send({ t: 'smart', ids: units.map(u => u.id), x: g.x, y: g.y, target: t?.id || 0, queue });
     app.audio?.ack(units[0], t && w.isHostile({ team: 0 }, t) ? 'attack' : 'move');
@@ -214,7 +217,7 @@ export class Input {
     const g = new THREE.Group();
     const inst = this.app.views.models.instance('buildings', d.model, this.app.hud.me.color);
     if (inst) {
-      inst.root.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.55; o.material.depthWrite = false; o.castShadow = false; } });
+      inst.root.traverse(o => { if (o.isMesh) { o.material = this.app.views.models.ghostOf(o.material, 0.55); o.castShadow = false; } });
       g.add(inst.root);
     }
     const cells = new THREE.Group();

@@ -50,6 +50,8 @@ export class Fog {
     material.userData.fogPatched = true;
     const U = this.uniforms;
     const prev = material.onBeforeCompile;
+    // distinct programs for distinct shader patches (the default key would be our wrapper's source)
+    const baseKey = material.userData.progKey || (prev ? prev.toString() : '');
     material.onBeforeCompile = (sh, r) => {
       if (prev) prev(sh, r);
       Object.assign(sh.uniforms, U);
@@ -65,7 +67,7 @@ export class Fog {
       sh.fragmentShader = FOG_HEAD + sh.fragmentShader.replace('#include <dithering_fragment>', `#include <dithering_fragment>
   gl_FragColor.rgb *= fogFactor(vFogW);`);
     };
-    material.customProgramCacheKey = () => (prev ? 'fogp' : 'fog') + material.type;
+    material.customProgramCacheKey = () => 'fog|' + material.type + '|' + baseKey;
     material.needsUpdate = true;
     return material;
   }

@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { Models, placeholder } from './models.js';
 import { ringTexture } from './textures.js';
 import { buildTrees, buildBridges, deckAt } from './props.js';
+import { icon } from '../ui/icons.js';
 
 const UNIT_SCALE = 1.45;
 const tmpV = new THREE.Vector3();
@@ -64,6 +65,7 @@ export class EntityViews {
 
   create(e) {
     if (e.kind === 'tree' || e.kind === 'shoal') return null;
+    if (e.kind === 'item') return this.createItem(e);
     const v = { e, root: new THREE.Group(), inst: null, anim: null, animT: -1, sel: null, alpha: 1, sink: 0 };
     const color = this.colorOf(e);
     if (e.kind === 'unit') {
@@ -86,6 +88,24 @@ export class EntityViews {
     v.root.position.copy(toThree(e.x, e.y, this.w.grid.heightAt(e.x, e.y)));
     v.root.rotation.y = yaw(e.facing);
     v.px = e.x; v.py = e.y; v.pf = e.facing;
+    this.group.add(v.root);
+    this.views.set(e.id, v);
+    return v;
+  }
+
+  // dropped loot: a floating icon over a golden glow, bobbing gently
+  createItem(e) {
+    const def = this.D.items.items[e.type];
+    const v = { e, root: new THREE.Group(), item: true, t: Math.random() * 6 };
+    this.itemTex ||= {};
+    const tex = this.itemTex[e.type] ||= new THREE.TextureLoader().load(icon(...def.icon), t => { t.colorSpace = THREE.SRGBColorSpace; });
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false }));
+    sp.scale.setScalar(0.75); sp.position.y = 1.0;
+    const glow = new THREE.Mesh(this.ringGeo, this.ringMat('#ffd060'));
+    glow.scale.set(1.3, 1, 1.3); glow.position.y = 0.06;
+    v.root.add(sp, glow); v.sprite = sp; v.height = 1.2;
+    v.root.position.set(e.x, this.w.grid.heightAt(e.x, e.y), -e.y);
+    v.px = e.x; v.py = e.y; v.pf = 0;
     this.group.add(v.root);
     this.views.set(e.id, v);
     return v;
@@ -136,7 +156,7 @@ export class EntityViews {
     for (const e of w.ents) {
       if (e.kind === 'tree' || e.kind === 'shoal') continue;
       let v = this.views.get(e.id);
-      if (!v) { if (!e.alive && e.kind === 'unit') continue; v = this.create(e); if (!v) continue; }
+      if (!v) { if (!e.alive) continue; v = this.create(e); if (!v) continue; }
       const x = v.px + (e.x - v.px) * alpha, y = v.py + (e.y - v.py) * alpha;
       let f = v.pf, df = e.facing - v.pf;
       while (df > Math.PI) df -= 2 * Math.PI; while (df < -Math.PI) df += 2 * Math.PI;
@@ -156,6 +176,7 @@ export class EntityViews {
       if (vis && e.kind === 'unit' && e.team !== 0) v.seen = true;
       if (e.kind === 'building' && e.team !== 0 && !v.revealed) { const i = g.idx(e.x, e.y); v.revealed = i >= 0 && w.explored[i]; vis = v.revealed; }
       v.root.visible = vis;
+      if (v.item) { v.t += dt; v.sprite.position.y = 1.0 + Math.sin(v.t * 2.5) * 0.12; v.root.visible = e.alive && this.app.fog.at(e.x, e.y) > 0.2; continue; }
       if (e.kind === 'unit') this.updateUnit(v, e, dt);
       else this.updateBuilding(v, e, dt);
       if (v.inst && vis) v.inst.mixer.update(dt);
@@ -190,8 +211,7 @@ export class EntityViews {
       if (!o.isMesh) return;
       if (on) {
         o.userData.orig = o.material;
-        const mk = m => { const c = m.clone(); c.transparent = true; c.opacity = 0.38; c.depthWrite = false; c.userData = { ...m.userData, fogPatched: false }; this.app.fog.patch(c); return c; };
-        o.material = Array.isArray(o.material) ? o.material.map(mk) : mk(o.material);
+        o.material = this.models.ghostOf(o.material, 0.38);
       } else if (o.userData.orig) { o.material = o.userData.orig; }
     });
   }

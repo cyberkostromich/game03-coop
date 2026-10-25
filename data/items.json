@@ -1,0 +1,19 @@
+{
+ "_doc": "Hero items (GDD 5): creep camps drop them, heroes carry 6. Passive stats apply while carried; consumables have charges.",
+ "items": {
+  "heal_potion": {"name": "Зелье здоровья", "desc": "Восстанавливает 250 здоровья.", "use": {"heal": 250}, "charges": 1, "icon": ["heart", "red"]},
+  "mana_potion": {"name": "Зелье маны", "desc": "Восстанавливает 150 маны.", "use": {"mana": 150}, "charges": 1, "icon": ["bolt", "blue"]},
+  "fish_pie": {"name": "Рыбный пирог", "desc": "Лечит героя и союзников рядом на 150.", "use": {"heal_area": 150, "radius": 6}, "charges": 2, "icon": ["coin", "gold"]},
+  "claws": {"name": "Когти атаки +6", "desc": "+6 к урону героя.", "stats": {"damage": 6}, "icon": ["claw", "red"]},
+  "ring": {"name": "Кольцо защиты +2", "desc": "+2 к броне героя.", "stats": {"armor": 2}, "icon": ["shield", "stone"]},
+  "boots": {"name": "Сапоги-скороходы", "desc": "+15% к скорости героя.", "stats": {"speed": 0.15}, "icon": ["boot", "green"]},
+  "gloves": {"name": "Перчатки проворства", "desc": "+15% к скорости атаки.", "stats": {"attack_speed": 0.15}, "icon": ["hand", "gold"]},
+  "tome": {"name": "Книга опыта", "desc": "Сразу даёт герою 200 опыта.", "instant": {"xp": 200}, "icon": ["book", "purple"]},
+  "moon_amulet": {"name": "Лунный амулет", "desc": "+3 к броне и +10% к урону.", "stats": {"armor": 3, "damage_pct": 0.1}, "icon": ["moon", "night"]}
+ },
+ "drops": {
+  "green": [["heal_potion", 0.5], ["mana_potion", 0.25]],
+  "yellow": [["claws", 0.2], ["ring", 0.2], ["boots", 0.15], ["tome", 0.25], ["heal_potion", 0.2]],
+  "red": [["moon_amulet", 0.3], ["gloves", 0.3], ["fish_pie", 0.2], ["tome", 0.2]]
+ }
+}

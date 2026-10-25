@@ -110,10 +110,10 @@ export class Net {
     btn.onclick = () => {
       this.started = true;
       // fill with computer allies if requested
-      const extra = Math.max(0, Math.min(4 - this.slots.length, +localStorage.getItem('ak.allies') || 0));
+      const extra = Math.max(0, Math.min(4 - this.slots.length, +(this.app.menuState?.allies) || 0));
       for (let i = 0; i < extra; i++) { const used = new Set(this.slots.map(s => s.faction)); this.slots.push({ peer: null, name: 'Союзник (ИИ)', faction: FACTIONS.find(f => !used.has(f)), ai: true }); }
       const players = this.slots.map(s => ({ name: s.name, faction: s.faction, ai: !!s.ai }));
-      const cfg = { players, difficulty: localStorage.getItem('ak.diff') || 'normal', seed: (Math.random() * 1e9) | 0, net: 'host' };
+      const cfg = { players, difficulty: this.app.menuState?.diff || 'normal', seed: (Math.random() * 1e9) | 0, net: 'host' };
       this.slots.forEach((s, i) => { if (s.peer) { this.bus.send(s.peer, { k: 'start', cfg: { ...cfg, me: i, net: 'client' } }); this.acks.set(s.peer, 0); } });
       onStart({ ...cfg, me: 0 });
     };

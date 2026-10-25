@@ -308,6 +308,7 @@ class App {
         case 'trained': if (ev.p === this.me) this.audio.play('trained'); break;
         case 'level': { const e = w.byId.get(ev.id); if (e?.owner === this.me) { this.audio.play('level'); this.hud.msg(`${e.def.name} достигает уровня ${ev.level}!`, 'ally'); } break; }
         case 'cast': this.audio.play('cast'); break;
+        case 'pickup': if (ev.p === this.me) { const it = this.D.items.items[ev.type]; const h = w.byId.get(ev.id); this.hud.msg(`${h?.def.name || 'Герой'} подбирает: ${it.name}`, 'ally'); this.audio.play('coin'); } break;
         case 'wave': this.audio.play('horn'); this.hud.banner(`Волна ${ev.n}`, `Крысы лезут из провалов: ${ev.count}`); break;
         case 'alert': if (ev.p === this.me) { this.alerts.push({ x: ev.x, y: ev.y }); if (this.alerts.length > 5) this.alerts.shift(); this.minimap.ping(ev.x, ev.y, '#ff4a3a'); this.audio.play('alert'); this.hud.msg('Нас атакуют! (Пробел — к месту боя)', 'alert'); } break;
         case 'crusade': this.audio.play('horn'); this.hud.banner('Крестовый поход!', '+30% к урону и скорости на 60 секунд'); break;

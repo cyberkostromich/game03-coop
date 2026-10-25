@@ -269,6 +269,12 @@ export class Abilities {
     }
     if (d.pack) m.dmg += Math.min(0.3 * packMult, (u.packN || 0) * d.pack * packMult);
     if (w.crusade.until > w.tick && u.team === 0) { m.dmg += 0.3; m.speed += 0.3; }
+    if (u.items) for (const it of u.items) {
+      const st = it && w.D.items.items[it.type]?.stats;
+      if (!st) continue;
+      m.dmgFlat = (m.dmgFlat || 0) + (st.damage || 0); m.armor += st.armor || 0; m.speed += st.speed || 0;
+      m.atkSpeed += st.attack_speed || 0; m.dmg += st.damage_pct || 0;
+    }
     if (m.invuln) u.invuln = true; else if (u.invuln && u.kind === 'unit') u.invuln = false;
     m.speed = Math.max(0.25, m.speed);
     m.atkSpeed = Math.max(0.3, m.atkSpeed);

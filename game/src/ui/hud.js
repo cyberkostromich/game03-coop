@@ -148,7 +148,7 @@ export class Hud {
     }
     const e = lead;
     const d = e.def;
-    const key = 's' + e.id + (e.kind === 'building' ? e.built >= 1 : '') + (e.queue?.map(q => q.unit || q.up || q.revive).join() || '');
+    const key = 's' + e.id + (e.kind === 'building' ? e.built >= 1 : '') + (e.queue?.map(q => q.unit || q.up || q.revive).join() || '') + (e.items ? JSON.stringify(e.items) : '');
     if (key !== this._infoKey) {
       this._infoKey = key;
       const own = e.owner === app.me;
@@ -159,8 +159,15 @@ export class Hud {
       if (e.kind === 'building' && (e.built < 1 || e.queue?.length)) html += `<div class="bar prog"><b></b><span></span></div>`;
       if (e.kind === 'building' && own && e.queue?.length) html += `<div id="queue">${e.queue.map((q, i) => `<div class="q" data-i="${i}" style="background-image:url(${this.queueIcon(q)})" title="Отменить"></div>`).join('')}</div>`;
       else html += `<div class="stats">${this.stats(e)}</div>`;
-      if (d.hero) html += `<div class="items">${'<div></div>'.repeat(6)}</div>`;
+      if (d.hero) {
+        const I = this.app.D.items.items;
+        html += `<div class="items">${Array.from({ length: 6 }, (_, i) => {
+          const it = e.items[i], def = it && I[it.type];
+          return def ? `<div class="it click" data-slot="${i}" title="${def.name}: ${def.desc}${def.use ? ' (щёлкните, чтобы использовать)' : ''}" style="background-image:url(${icon(...def.icon)})">${it.charges > 1 ? `<b>${it.charges}</b>` : ''}</div>` : '<div></div>';
+        }).join('')}</div>`;
+      }
       box.innerHTML = html;
+      box.querySelectorAll('.items .it').forEach(d2 => d2.onclick = () => { if (e.owner === app.me) app.send({ t: 'useitem', id: e.id, slot: +d2.dataset.slot }); });
       box.querySelectorAll('#queue .q').forEach(q => q.onclick = () => app.send({ t: 'cancel', building: e.id, slot: +q.dataset.i }));
     }
     const hp = box.querySelector('.bar.hp');

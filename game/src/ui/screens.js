@@ -19,8 +19,10 @@ function screen(id, html) {
 
 export function showMenu(app, onStart) {
   const D = app.D;
-  const st = { faction: localStorage.getItem('ak.faction') || 'cats', allies: +(localStorage.getItem('ak.allies') ?? 1), diff: localStorage.getItem('ak.diff') || 'normal', name: localStorage.getItem('ak.name') || 'Игрок' };
-  try { void 0; } catch { /* storage may be blocked */ }
+  const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+  const st = { faction: get('ak.faction', 'cats'), allies: +get('ak.allies', 1), diff: get('ak.diff', 'normal'), name: get('ak.name', 'Игрок') };
+  app.menuState = st;
+  const rtc = typeof RTCPeerConnection !== 'undefined' || new URLSearchParams(location.search).has('local');
   const d = screen('menuScreen', `
     <div class="card frame">
       <div class="gem" style="left:-9px;top:-9px"></div><div class="gem" style="right:-9px;top:-9px"></div>
@@ -36,9 +38,10 @@ export function showMenu(app, onStart) {
       <h2>Сложность Чумы</h2>
       <div class="row" id="diffRow">${[['easy', 'Лёгкая'], ['normal', 'Нормальная'], ['ruthless', 'Безжалостная']].map(([k, n]) => `<div class="opt ${k === st.diff ? 'on' : ''}" data-d="${k}">${n}</div>`).join('')}</div>
       <h2>Кооператив по сети</h2>
-      <div class="row"><input type="text" id="pname" value="${st.name}" maxlength="16" placeholder="Имя">
+      ${rtc ? `<div class="row"><input type="text" id="pname" value="${st.name}" maxlength="16" placeholder="Имя">
         <div class="opt" id="hostBtn">Создать игру</div>
-        <input type="text" id="joinCode" placeholder="Код хоста" maxlength="40"><div class="opt" id="joinBtn">Подключиться</div></div>
+        <input type="text" id="joinCode" placeholder="Код хоста" maxlength="40"><div class="opt" id="joinBtn">Подключиться</div></div>`
+        : `<div class="hint" style="text-align:left">Этот браузер или страница не разрешает прямое соединение (WebRTC). Сетевой кооператив работает в версии игры, запущенной с сервера; здесь можно играть с союзниками под управлением компьютера.</div><input type="hidden" id="pname" value="${st.name}">`}
       <div id="lobby"></div>
       <button class="big-btn" id="startBtn">В бой!</button>
       <div class="hint">ПКМ — приказ · рамка — выделить · A атака · B строить · Q W E R способности героя · Ctrl+1..9 отряды · F10 меню</div>
@@ -63,8 +66,8 @@ export function showMenu(app, onStart) {
     return { players, me: 0, difficulty: st.diff, seed: (Math.random() * 1e9) | 0 };
   };
   d.querySelector('#startBtn').onclick = () => { d.remove(); onStart(build()); };
-  d.querySelector('#hostBtn').onclick = () => app.net.host?.(st, d, cfg => { d.remove(); onStart(cfg); });
-  d.querySelector('#joinBtn').onclick = () => app.net.join?.(d.querySelector('#joinCode').value.trim(), st, d, cfg => { d.remove(); onStart(cfg); });
+  if (rtc) d.querySelector('#hostBtn').onclick = () => app.net.host?.(st, d, cfg => { d.remove(); onStart(cfg); });
+  if (rtc) d.querySelector('#joinBtn').onclick = () => app.net.join?.(d.querySelector('#joinCode').value.trim(), st, d, cfg => { d.remove(); onStart(cfg); });
 }
 
 export function showPause(app, on) {
